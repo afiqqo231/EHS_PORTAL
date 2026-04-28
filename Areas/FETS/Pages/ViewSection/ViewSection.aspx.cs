@@ -919,12 +919,26 @@ namespace FETS.Pages.ViewSection
                 else
                 {
                     query += @"(
-                        (fe.DateExpired < GETDATE() OR 
+                        (fe.DateExpired < GETDATE() OR
                         (fe.DateExpired >= GETDATE() AND fe.DateExpired <= DATEADD(day, 60, GETDATE())))
                         AND s.StatusName != 'Under Service'
-                    )
-                    ORDER BY 
-                        CASE 
+                    )";
+
+                    if (!IsAdministrator && UserPlantID.HasValue)
+                        query += " AND fe.PlantID = @UserPlantID";
+                    if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                        query += " AND fe.PlantID = @PlantID";
+                    if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                        query += " AND fe.LevelID = @LevelID";
+                    if (!string.IsNullOrEmpty(ddlFilterType.SelectedValue))
+                        query += " AND fe.TypeID = @TypeID";
+                    if (!string.IsNullOrEmpty(ddlFilterMonth.SelectedValue))
+                        query += " AND MONTH(fe.DateExpired) = @Month";
+                    if (!string.IsNullOrEmpty(ddlFilterYear.SelectedValue))
+                        query += " AND YEAR(fe.DateExpired) = @Year";
+
+                    query += @" ORDER BY
+                        CASE
                             WHEN fe.DateExpired < GETDATE() THEN 1
                             ELSE 2
                         END,
@@ -944,6 +958,21 @@ namespace FETS.Pages.ViewSection
                         {
                             return;
                         }
+                    }
+                    else
+                    {
+                        if (!IsAdministrator && UserPlantID.HasValue)
+                            cmd.Parameters.AddWithValue("@UserPlantID", UserPlantID.Value);
+                        if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                            cmd.Parameters.AddWithValue("@PlantID", ddlFilterPlant.SelectedValue);
+                        if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                            cmd.Parameters.AddWithValue("@LevelID", ddlFilterLevel.SelectedValue);
+                        if (!string.IsNullOrEmpty(ddlFilterType.SelectedValue))
+                            cmd.Parameters.AddWithValue("@TypeID", ddlFilterType.SelectedValue);
+                        if (!string.IsNullOrEmpty(ddlFilterMonth.SelectedValue))
+                            cmd.Parameters.AddWithValue("@Month", ddlFilterMonth.SelectedValue);
+                        if (!string.IsNullOrEmpty(ddlFilterYear.SelectedValue))
+                            cmd.Parameters.AddWithValue("@Year", ddlFilterYear.SelectedValue);
                     }
 
                     using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
@@ -1632,8 +1661,9 @@ namespace FETS.Pages.ViewSection
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
+                // Base query — same columns as main grid, exclude already-serviced FEs
                 string query = @"
-                    SELECT 
+                    SELECT
                         fe.FEID,
                         fe.SerialNumber,
                         fe.AreaCode,
@@ -1647,29 +1677,56 @@ namespace FETS.Pages.ViewSection
                     INNER JOIN FETS.Levels l ON fe.LevelID = l.LevelID
                     INNER JOIN FETS.FireExtinguisherTypes t ON fe.TypeID = t.TypeID
                     INNER JOIN FETS.Status s ON fe.StatusID = s.StatusID
-                    WHERE s.StatusName != 'Under Service'
-                    AND (
-                        fe.DateExpired < GETDATE() -- Expired
-                        OR 
-                        (fe.DateExpired >= GETDATE() AND fe.DateExpired <= DATEADD(day, 60, GETDATE())) -- Expiring Soon (within 60 days)
-                    )";
-                    
-                // Add plant restriction for non-admin users
+                    WHERE s.StatusName != 'Under Service'";
+
+                // Apply same filters as the main grid so modal respects what user selected
                 if (!IsAdministrator && UserPlantID.HasValue)
-                {
                     query += " AND fe.PlantID = @UserPlantID";
-                }
-                
+
+                if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                    query += " AND fe.PlantID = @PlantID";
+                if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                    query += " AND fe.LevelID = @LevelID";
+                if (!string.IsNullOrEmpty(ddlFilterStatus.SelectedValue))
+                    query += " AND fe.StatusID = @StatusID";
+                if (!string.IsNullOrEmpty(ddlFilterType.SelectedValue))
+                    query += " AND fe.TypeID = @TypeID";
+                if (!string.IsNullOrEmpty(ddlFilterMonth.SelectedValue))
+                    query += " AND MONTH(fe.DateExpired) = @Month";
+                if (!string.IsNullOrEmpty(ddlFilterYear.SelectedValue))
+                    query += " AND YEAR(fe.DateExpired) = @Year";
+                if (!string.IsNullOrEmpty(txtSearch.Text))
+                    query += @" AND (
+                        fe.SerialNumber LIKE @Search OR
+                        p.PlantName LIKE @Search OR
+                        l.LevelName LIKE @Search OR
+                        fe.Location LIKE @Search OR
+                        t.TypeName LIKE @Search OR
+                        fe.Remarks LIKE @Search
+                    )";
+
                 query += " ORDER BY fe.DateExpired ASC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    // Add user plant parameter if needed
                     if (!IsAdministrator && UserPlantID.HasValue)
-                    {
                         cmd.Parameters.AddWithValue("@UserPlantID", UserPlantID.Value);
-                    }
-                    
+
+                    if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                        cmd.Parameters.AddWithValue("@PlantID", ddlFilterPlant.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                        cmd.Parameters.AddWithValue("@LevelID", ddlFilterLevel.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterStatus.SelectedValue))
+                        cmd.Parameters.AddWithValue("@StatusID", ddlFilterStatus.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterType.SelectedValue))
+                        cmd.Parameters.AddWithValue("@TypeID", ddlFilterType.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterMonth.SelectedValue))
+                        cmd.Parameters.AddWithValue("@Month", ddlFilterMonth.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterYear.SelectedValue))
+                        cmd.Parameters.AddWithValue("@Year", ddlFilterYear.SelectedValue);
+                    if (!string.IsNullOrEmpty(txtSearch.Text))
+                        cmd.Parameters.AddWithValue("@Search", "%" + txtSearch.Text + "%");
+
                     using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
                     {
                         DataTable dt = new DataTable();
