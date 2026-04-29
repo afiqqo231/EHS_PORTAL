@@ -2470,6 +2470,12 @@ namespace FETS.Pages.ViewSection
                     query += " AND fe.PlantID = @UserPlantID";
                 }
                         
+                // Allow admins to filter the complete service list by Plant and Level
+                if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                    query += " AND fe.PlantID = @PlantID";
+                if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                    query += " AND fe.LevelID = @LevelID";
+
                 query += " ORDER BY fe.SerialNumber";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -2479,6 +2485,11 @@ namespace FETS.Pages.ViewSection
                     {
                         cmd.Parameters.AddWithValue("@UserPlantID", UserPlantID.Value);
                     }
+                    // Add optional admin filters
+                    if (!string.IsNullOrEmpty(ddlFilterPlant.SelectedValue))
+                        cmd.Parameters.AddWithValue("@PlantID", ddlFilterPlant.SelectedValue);
+                    if (!string.IsNullOrEmpty(ddlFilterLevel.SelectedValue))
+                        cmd.Parameters.AddWithValue("@LevelID", ddlFilterLevel.SelectedValue);
                     
                     using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
                     {
