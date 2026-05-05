@@ -242,6 +242,7 @@
     <Content Include="Areas\CLIP\Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Areas\CLIP\Scripts\modernizr-2.8.3.js" />
     <Content Include="Areas\CORD\Content\Site.css" />
+    <Content Include="Areas\CORD\EmailTemplates\BriefingInviteTemplate.html" />
     <Content Include="Areas\Training\favicon.ico" />
     <Content Include="Areas\Training\Images\environment.png" />
     <Content Include="Areas\Training\Images\general.png" />
