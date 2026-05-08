@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -56,6 +57,26 @@ namespace EHS_PORTAL
                 _updateInterval, _updateInterval);
         }
         
+        // Routes accessible via the public reverse proxy.
+        // Everything else returns 404 when requested through the proxy host.
+        private static readonly string[] _proxyAllowedPrefixes = new[]
+        {
+            "/cord/signing",
+            "/cord/registration/register",
+            "/cord/registration/lookuppic",
+            "/cord/registration/searchpic",
+            "/cord/registration/success",
+            "/api/token/validate",
+            "/api/eula/active-pdf",
+            "/api/eula/submit-pdf",
+        };
+
+        private static readonly string[] _staticExtensions = new[]
+        {
+            ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".ico",
+            ".svg", ".woff", ".woff2", ".ttf", ".eot", ".map", ".html"
+        };
+
         protected void Application_BeginRequest(object sender, EventArgs e)
         {
             // Set culture for each request
@@ -64,6 +85,30 @@ namespace EHS_PORTAL
             customCulture.DateTimeFormat.DateSeparator = "/";
             Thread.CurrentThread.CurrentCulture = customCulture;
             Thread.CurrentThread.CurrentUICulture = customCulture;
+
+            // Block admin/internal routes when accessed via the public proxy
+            var publicHost = ConfigurationManager.AppSettings["Agreements.PublicHost"] ?? string.Empty;
+            if (string.IsNullOrEmpty(publicHost)) return;
+
+            var request = HttpContext.Current.Request;
+            if (!string.Equals(request.Url.Host, publicHost, StringComparison.OrdinalIgnoreCase)) return;
+
+            var path = request.Url.AbsolutePath.ToLowerInvariant();
+
+            // Always allow static files
+            var ext = Path.GetExtension(path);
+            if (!string.IsNullOrEmpty(ext) && _staticExtensions.Contains(ext)) return;
+
+            // Check against whitelist
+            foreach (var prefix in _proxyAllowedPrefixes)
+            {
+                if (path == prefix || path.StartsWith(prefix + "/"))
+                    return;
+            }
+
+            // Not in whitelist — block
+            HttpContext.Current.Response.StatusCode = 404;
+            HttpContext.Current.Response.End();
         }
         
         protected void Session_Start(object sender, EventArgs e)
