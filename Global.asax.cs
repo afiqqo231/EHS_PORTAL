@@ -91,6 +91,11 @@ namespace EHS_PORTAL
             if (string.IsNullOrEmpty(publicHost)) return;
 
             var request = HttpContext.Current.Request;
+            // TEMP: log host for debugging — remove after confirming
+            System.IO.File.AppendAllText(
+                Server.MapPath("~/App_Data/ErrorLogs/proxy-debug.log"),
+                $"{DateTime.Now:HH:mm:ss} | RequestHost={request.Url.Host} | ConfigHost={publicHost} | Match={string.Equals(request.Url.Host, publicHost, StringComparison.OrdinalIgnoreCase)} | Path={request.Url.AbsolutePath}\n");
+
             if (!string.Equals(request.Url.Host, publicHost, StringComparison.OrdinalIgnoreCase)) return;
 
             var path = request.Url.AbsolutePath.ToLowerInvariant();
