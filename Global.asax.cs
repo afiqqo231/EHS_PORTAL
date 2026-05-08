@@ -66,6 +66,7 @@ namespace EHS_PORTAL
             "/cord/registration/lookuppic",
             "/cord/registration/searchpic",
             "/cord/registration/success",
+            "/cord/eula/file",
             "/api/token/validate",
             "/api/eula/active-pdf",
             "/api/eula/submit-pdf",
@@ -91,11 +92,6 @@ namespace EHS_PORTAL
             if (string.IsNullOrEmpty(publicHost)) return;
 
             var request = HttpContext.Current.Request;
-            // TEMP: log host for debugging — remove after confirming
-            System.IO.File.AppendAllText(
-                Server.MapPath("~/App_Data/ErrorLogs/proxy-debug.log"),
-                $"{DateTime.Now:HH:mm:ss} | RequestHost={request.Url.Host} | ConfigHost={publicHost} | Match={string.Equals(request.Url.Host, publicHost, StringComparison.OrdinalIgnoreCase)} | Path={request.Url.AbsolutePath}\n");
-
             if (!string.Equals(request.Url.Host, publicHost, StringComparison.OrdinalIgnoreCase)) return;
 
             var path = request.Url.AbsolutePath.ToLowerInvariant();
@@ -111,9 +107,9 @@ namespace EHS_PORTAL
                     return;
             }
 
-            // Not in whitelist — block
+            // Not in whitelist — block without throwing ThreadAbortException
             HttpContext.Current.Response.StatusCode = 404;
-            HttpContext.Current.Response.End();
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
         
         protected void Session_Start(object sender, EventArgs e)
