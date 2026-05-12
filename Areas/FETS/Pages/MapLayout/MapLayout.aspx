@@ -314,6 +314,47 @@
             text-align: center;
         }
 
+        .modal-marker {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            transform: translate(-50%, -100%);
+            cursor: default;
+            z-index: 10;
+        }
+
+        .modal-marker-icon {
+            width:14px;
+            height: 14px;
+            background-color: #e74c3c;
+            border: 2px solid #c0392b;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45def);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .modal-marker-tooltip {
+            position: absolute;
+            bottom: calc(100% +6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 8px 10px;
+            width: 160px;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            display: none;
+            z-index: 20;
+            pointer-events: none;
+            text-align: left;
+        }
+
+        .modal-marker:hover .modal-marker-tooltip {
+            display: block;
+        }
+
         .full-screen-map {
             max-width: 100%;
             max-height: 80vh;
@@ -602,7 +643,7 @@
                                             CommandArgument='<%# Eval("ImagePath") + "," + Eval("PlantName") + "," + Eval("LevelName") %>'
                                             CssClass="btn btn-sm btn-primary"
                                             Text="View"
-                                            OnClientClick='<%# "openMapModal(\"" + ResolveUrl("~/Uploads/Maps/" + Eval("ImagePath")) + "\", \"" + Eval("PlantName") + "\", \"" + Eval("LevelName") + "\"); return false;" %>' />
+                                            OnClientClick='<%# "openMapModal(\"" + ResolveUrl("~/Uploads/Maps/" + Eval("ImagePath")) + "\", \"" + Eval("PlantName") + "\", \"" + Eval("LevelName") + "\", " + Eval("PlantID") + ", " + Eval("LevelID") + "); return false;" %>' />
                                         <asp:LinkButton ID="btnDelete" runat="server" 
                                             CommandName="DeleteMap" 
                                             CommandArgument='<%# Eval("MapID") %>'
@@ -634,7 +675,16 @@
                 <span class="close-modal" onclick="closeMapModal()">&times;</span>
             </div>
             <div class="map-modal-body">
-                <img id="fullScreenMap" class="full-screen-map" src="" alt="Floor Map" />
+                <div id="modalMapWrapper" style="position:relative; display:inline-block;">
+                    <img id="fullScreenMap" class="full-screen-map" src="" alt="Floor Map" />
+                    <div id="modalMarkersContainer"></div>
+                </div>
+            </div>
+            <div class="map-modal-footer" style="padding: 12px 20px; border-top: 1px solid #dee2e6; text-align: right; background: #f8f9fa; border-radius: 0 0 8px 8px;">
+                <a id="btnOpenFullView" href="#" target="_blank"
+                   style="padding: 8px 16px; background: #007bff; color: white; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                    &#128507; Open Full View (Pin Mode)
+                </a>
             </div>
         </div>
     </div>
@@ -692,24 +742,32 @@
         }
 
         // Modal functions
-        function openMapModal(imageUrl, plantName, levelName) {
+        function openMapModal(imageUrl, plantName, levelName, plantId, levelId) {
             var modal = document.getElementById('mapModal');
             var fullScreenMap = document.getElementById('fullScreenMap');
             var modalTitle = document.getElementById('mapModalTitle');
-            
-            // Set the map image source
+            var btnFullView = document.getElementById('btnOpenFullView');
+
+            // Set image and title
             fullScreenMap.src = imageUrl;
-            
-            // Set the modal title
             modalTitle.innerText = plantName + ' - ' + levelName + ' Map';
+
+            // Set "Open Full View" link with PlantID + LevelID
+            btnFullView.href = '<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/ViewMap.aspx") %>?PlantID=' + plantId + '&LevelID=' + levelId;
             
-            // Show the modal
+            // Load Fire Extinguisher pins
+            document.getElementById('modalMarkersContainer').innerHTML = '';
+            fullScreenMap.onload = function () {
+                loadModalPins(plantId, levelId);
+            };
+
+            if (fullScreenMap.complete && fullScreenMap.naturalWidth > 0) {
+                loadModalPins(plantId, levelId);
+            }
+
+            // Show modal
             modal.style.display = 'block';
-            
-            // Disable scrolling on the body
             document.body.style.overflow = 'hidden';
-            
-            // Add escape key listener
             document.addEventListener('keydown', closeModalOnEscape);
         }
         
@@ -722,6 +780,9 @@
             
             // Remove escape key listener
             document.removeEventListener('keydown', closeModalOnEscape);
+
+            // Clear existing pins from modal
+            document.getElementById('modalMarkersContainer').innerHTML = '';
         }
         
         function closeModalOnEscape(e) {
@@ -736,6 +797,40 @@
             if (event.target == modal) {
                 closeMapModal();
             }
+        }
+
+        function loadModalPins(plantId, levelId) {
+            var url = '<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/GetPins.ashx") %>' + '?PlantID=' + plantId + '&LevelID=' + levelId;
+
+            fetch(url)
+                .then(function (r){
+                    if (!r.ok) throw new Error('Status ' + r.status);
+                    return r.json();
+                })
+                .then(function (pins) {
+                    var container = document.getElementById('modalMarkersContainer');
+
+                    pins.forEach(function (pin) {
+                        var marker = document.createElement('div');
+                        marker.className = 'modal-marker';
+                        
+                        marker.style.left = (pin.pinX * 100) + '%';
+                        marker.style.top = (pin.pinY *100) + '%';
+
+                        var icon= document.createElement('div');
+                        icon.className = 'modal-marker-icon';
+                        var tooltip = document.createElement('div');
+                        tooltip.className = 'modal-marker-tooltip';
+                        tooltip.innerHTML = '<strong>' + pin.serial + '</strong><br>' + pin.type + '<br>' + pin.location + '<br>' + '<span style="color: ' + (pin.status.toLowerCase().includes('active') ? 'green' : 'red') + '">' + pin.status + '</span>';
+                        marker.appendChild(icon);
+                        marker.appendChild(tooltip);
+                        container.appendChild(marker);
+                    });
+                })
+                .catch(function (err) {
+                    console.error('GetPins failed:', err);
+                })
+
         }
 
         // Fallback for browsers that don't support our modal

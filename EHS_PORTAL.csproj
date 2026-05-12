@@ -243,6 +243,7 @@
     <Content Include="Areas\CLIP\Scripts\modernizr-2.8.3.js" />
     <Content Include="Areas\CORD\Content\Site.css" />
     <Content Include="Areas\CORD\EmailTemplates\BriefingInviteTemplate.html" />
+    <Content Include="Areas\FETS\Pages\MapLayout\SavePin.ashx" />
     <Content Include="Areas\Training\favicon.ico" />
     <Content Include="Areas\Training\Images\environment.png" />
     <Content Include="Areas\Training\Images\general.png" />
@@ -346,6 +347,7 @@
     <Content Include="Areas\CORD\Views\AttendanceHistory\Index.cshtml" />
     <Content Include="Areas\CORD\Views\AttendanceHistory\Create.cshtml" />
     <Content Include="Areas\CORD\Views\AttendanceHistory\_EditModal.cshtml" />
+    <Content Include="Areas\FETS\Pages\MapLayout\GetPins.ashx" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -611,6 +613,12 @@
     <Compile Include="Areas\CLIP\Models\UserCompetency.cs" />
     <Compile Include="Areas\CLIP\Models\UserPlant.cs" />
     <Compile Include="Areas\CLIP\Services\ActivityLogger.cs" />
+    <Compile Include="Areas\FETS\Pages\MapLayout\GetPins.ashx.cs">
+      <DependentUpon>GetPins.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\FETS\Pages\MapLayout\SavePin.ashx.cs">
+      <DependentUpon>SavePin.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Areas\FETS\Pages\PublicDashboard\About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>

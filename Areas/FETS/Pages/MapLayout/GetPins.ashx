@@ -1,0 +1,1 @@
+<%@ WebHandler Language="C#" CodeBehind="GetPins.ashx.cs" Class="EHS_PORTAL.Areas.FETS.Pages.MapLayout.GetPins" %>
