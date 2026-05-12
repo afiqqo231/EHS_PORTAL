@@ -1,3 +1,4 @@
+using FETS.Models;
 using System;
 using System.Configuration;
 using System.Data;
@@ -9,6 +10,7 @@ namespace FETS.Pages.MapLayout
 {
     public partial class ViewMap : System.Web.UI.Page
     {
+        protected bool IsAdmin { get; private set; }
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!User.Identity.IsAuthenticated)
@@ -20,6 +22,7 @@ namespace FETS.Pages.MapLayout
             if (!IsPostBack)
             {
                 lblUsername.Text = User.Identity.Name;
+                IsAdmin = RoleHelper.IsUserInRole("Administrator");
                 LoadMapAndInfo();
             }
         }
@@ -75,12 +78,15 @@ namespace FETS.Pages.MapLayout
                 // Load fire extinguisher count and details
                 using (SqlCommand cmd = new SqlCommand(@"
                     SELECT 
+                        fe.FEID,
                         fe.SerialNumber,
                         fe.Location,
                         t.TypeName,
                         fe.DateExpired,
                         s.StatusName,
-                        s.ColorCode
+                        s.ColorCode,
+                        fe.PinX,
+                        fe.PinY
                     FROM FETS.FireExtinguishers fe
                     INNER JOIN FETS.FireExtinguisherTypes t ON fe.TypeID = t.TypeID
                     INNER JOIN FETS.Status s ON fe.StatusID = s.StatusID
