@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using System.Data.Entity.Infrastructure;
 using EHS_PORTAL.Areas.CLIP.Models;
 using EHS_PORTAL.Areas.CLIP.Filters;
@@ -10,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class CompetencyController : BaseController
     {
         public ActionResult Index()

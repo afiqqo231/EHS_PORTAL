@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
@@ -16,7 +17,7 @@ using EHS_PORTAL.Areas.CLIP.Services;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class ManageController : Controller
     {
         private EHS_PORTAL.ApplicationSignInManager _signInManager;
@@ -500,7 +501,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Manage/Users
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Users()
         {
             var db = new ApplicationDbContext();
@@ -509,7 +510,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Manage/EditUser/userId
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> EditUser(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -581,7 +582,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Manage/EditUser/userId
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> EditUser(EditUserProfileViewModel model, string section)
         {
             if (!ModelState.IsValid)
@@ -701,7 +702,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Manage/UserDetails/userId
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> UserDetails(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -741,7 +742,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Manage/DeleteUser/userId
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteUser(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -790,7 +791,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Manage/DeleteUser/userId
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteUser(string id, FormCollection form)
         {
             if (string.IsNullOrEmpty(id))
@@ -867,7 +868,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Manage/ResetUserPassword/userId
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> ResetUserPassword(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -888,7 +889,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Manage/ResetUserPassword/userId
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public async Task<ActionResult> ResetUserPassword(string id, SetPasswordViewModel model)
         {
             if (!ModelState.IsValid)

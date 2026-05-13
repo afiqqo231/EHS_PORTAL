@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using Microsoft.AspNet.Identity;
 using EHS_PORTAL.Areas.CLIP.Models;
 using System.Collections.Generic;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class ActivityTrainingController : BaseController
     {
         

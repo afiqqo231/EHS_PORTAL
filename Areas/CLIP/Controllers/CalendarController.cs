@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using EHS_PORTAL.Areas.CLIP.Models;
 using Microsoft.AspNet.Identity;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class CalendarController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();

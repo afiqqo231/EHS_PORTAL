@@ -348,6 +348,7 @@
     <Content Include="Areas\CORD\Views\AttendanceHistory\Create.cshtml" />
     <Content Include="Areas\CORD\Views\AttendanceHistory\_EditModal.cshtml" />
     <Content Include="Areas\FETS\Pages\MapLayout\GetPins.ashx" />
+    <Content Include="Areas\FETS\Pages\MapLayout\UpdateFE.ashx" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -554,6 +555,7 @@
     <Compile Include="Areas\CLIP\Core\CustomAttributes.cs" />
     <Compile Include="Areas\CLIP\Core\DateFormatHelper.cs" />
     <Compile Include="Areas\CLIP\Filters\ActivityLoggerAttribute.cs" />
+    <Compile Include="Areas\CLIP\Filters\ClipAuthorizeAttribute.cs" />
     <Compile Include="Areas\CLIP\Controllers\CalendarController.cs" />
     <Compile Include="Areas\CLIP\Migrations\202504240642424_InitIdentity.cs" />
     <Compile Include="Areas\CLIP\Migrations\202504240642424_InitIdentity.Designer.cs">
@@ -618,6 +620,9 @@
     </Compile>
     <Compile Include="Areas\FETS\Pages\MapLayout\SavePin.ashx.cs">
       <DependentUpon>SavePin.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\FETS\Pages\MapLayout\UpdateFE.ashx.cs">
+      <DependentUpon>UpdateFE.ashx</DependentUpon>
     </Compile>
     <Compile Include="Areas\FETS\Pages\PublicDashboard\About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>

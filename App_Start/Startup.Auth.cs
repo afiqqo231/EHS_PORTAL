@@ -26,18 +26,22 @@ namespace EHS_PORTAL
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
-                LoginPath = new PathString("/Account/Login"),
+                LoginPath = new PathString("/CLIP/Account/Login"),
                 CookieName = ".CLIP_AUTH_COOKIE",
                 CookiePath = "/CLIP",
-                ExpireTimeSpan = TimeSpan.FromMinutes(30), // Session expires after 30 minutes of inactivity
-                SlidingExpiration = true, // Reset the expiration time on each request
+                ExpireTimeSpan = TimeSpan.FromMinutes(30),
+                SlidingExpiration = true,
                 Provider = new CookieAuthenticationProvider
                 {
-                    // Enables the application to validate the security stamp when the user logs in.
-                    // This is a security feature which is used when you change a password or add an external login to your account.  
                     OnValidateIdentity = SecurityStampValidator.OnValidateIdentity<ApplicationUserManager, ApplicationUser>(
                         validateInterval: TimeSpan.FromMinutes(30),
-                        regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager))
+                        regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager)),
+                    OnApplyRedirect = ctx =>
+                    {
+                        // SuppressFormsAuthenticationRedirect lives on System.Web.HttpResponse, not IOwinResponse
+                        System.Web.HttpContext.Current.Response.SuppressFormsAuthenticationRedirect = true;
+                        ctx.Response.Redirect(ctx.RedirectUri);
+                    }
                 }
             });            
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);

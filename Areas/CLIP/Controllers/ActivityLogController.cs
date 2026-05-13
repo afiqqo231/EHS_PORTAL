@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using EHS_PORTAL.Areas.CLIP.Models;
 using PagedList;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [ClipAuthorize(Roles = "Admin")]
     public class ActivityLogController : BaseController
     {
         // GET: CLIP/ActivityLog

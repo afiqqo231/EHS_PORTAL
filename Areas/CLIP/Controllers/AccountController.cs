@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
@@ -16,7 +17,7 @@ using EHS_PORTAL.Areas.CLIP.Filters;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class AccountController : Controller
     {
         private ApplicationSignInManager _signInManager;
@@ -159,7 +160,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
 
         //
         // GET: /Account/Register
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Register()
         {
             // Create a list with the available roles (Admin and User)
@@ -202,7 +203,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         //
         // POST: /Account/Register
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {

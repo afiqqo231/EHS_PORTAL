@@ -5,12 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using Microsoft.AspNet.Identity;
 using EHS_PORTAL.Areas.CLIP.Models;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class UserCompetencyController : BaseController
     {
         // GET: UserCompetency
@@ -319,7 +320,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: UserCompetency/DeleteConfirm/5
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult DeleteConfirm(int id)
         {
             var userCompetency = _db.UserCompetencies
@@ -342,7 +343,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
 
         // POST: UserCompetency/Delete/5
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {

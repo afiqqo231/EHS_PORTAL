@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using EHS_PORTAL.Areas.CLIP.Models;
 using System.Globalization;
 using System.IO;
@@ -16,7 +17,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class PlantMonitoringController : BaseController
     {
         // GET: PlantMonitoring
@@ -302,7 +303,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: PlantMonitoring/Create
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Create()
         {
             ViewBag.PlantID = new SelectList(_db.Plants.OrderBy(p => p.PlantName), "Id", "PlantName");
@@ -318,7 +319,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: PlantMonitoring/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Create(PlantMonitoring plantMonitoring)
         {
             if (ModelState.IsValid)
@@ -367,7 +368,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: PlantMonitoring/Edit/5
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -417,7 +418,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: PlantMonitoring/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Edit(PlantMonitoring plantMonitoring, HttpPostedFileBase quoteDocument, HttpPostedFileBase eprDocument, HttpPostedFileBase workDocument)
         {
             if (ModelState.IsValid)
@@ -566,7 +567,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: PlantMonitoring/Delete/5
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -588,7 +589,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: PlantMonitoring/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult DeleteConfirmed(int id)
         {
             PlantMonitoring plantMonitoring = _db.PlantMonitorings.Find(id);

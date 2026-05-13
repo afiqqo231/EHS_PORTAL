@@ -6,12 +6,13 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using EHS_PORTAL.Areas.CLIP.Models;
 using EHS_PORTAL.Controllers;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class MonitoringController : BaseController
     {
         // GET: Monitoring
@@ -36,7 +37,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Monitoring/Create
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Create()
         {
             PopulateDropDownLists();
@@ -46,7 +47,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Monitoring/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Create([Bind(Include = "MonitoringID,MonitoringName,MonitoringCategory,MonitoringFreq")] Monitoring monitoring)
         {
             // Validate custom frequency
@@ -69,7 +70,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Monitoring/Edit/5
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -89,7 +90,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Monitoring/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Edit([Bind(Include = "MonitoringID,MonitoringName,MonitoringCategory,MonitoringFreq")] Monitoring monitoring)
         {
             // Validate custom frequency
@@ -115,7 +116,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // GET: Monitoring/Delete/5
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -133,7 +134,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         // POST: Monitoring/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [ClipAuthorize(Roles = "Admin")]
         public ActionResult DeleteConfirmed(int id)
         {
             Monitoring monitoring = _db.Monitorings.Find(id);

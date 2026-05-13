@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 using EHS_PORTAL.Areas.CLIP.Models;
 using System.IO;
 
@@ -12,7 +13,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
     {
         private ApplicationDbContext db = new ApplicationDbContext();
         
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult Index()
         {
             var plantCounts = GetPlantMachineCounts();
@@ -123,7 +124,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
             return View();
         }
 
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";
@@ -152,38 +153,38 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         // Redirect to the new Competency controller for backward compatibility
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult Competency()
         {
             return RedirectToAction("Index", "Competency", new { area = "CLIP" });
         }
 
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult AddCompetency()
         {
             return View();
         }
 
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult Monitoring()
         {
             return View();
         }
         
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult EnvironmentMonitoring()
         {
             return View();
         }
         
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult SafetyHealthMonitoring()
         {
             return View();
         }
 
         [HttpPost]
-        [Authorize]
+        [ClipAuthorize]
         [ValidateAntiForgeryToken]
         public ActionResult AddCompetency(CompetencyModule model)
         {
@@ -200,7 +201,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [ClipAuthorize]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteCompetency(int id)
         {
@@ -227,7 +228,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
             return RedirectToAction("Competency", new { area = "CLIP" });
         }
 
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult EditCompetency(int id)
         {
             var db = new ApplicationDbContext();
@@ -243,7 +244,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [ClipAuthorize]
         [ValidateAntiForgeryToken]
         public ActionResult EditCompetency(CompetencyModule model)
         {
@@ -272,7 +273,7 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
             return View(model);
         }
 
-        [Authorize]
+        [ClipAuthorize]
         public ActionResult OpenFile()
         {
             // Path to the file you want to open

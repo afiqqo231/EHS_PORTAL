@@ -1,8 +1,9 @@
 using System.Web.Mvc;
+using EHS_PORTAL.Areas.CLIP.Filters;
 
 namespace EHS_PORTAL.Areas.CLIP.Controllers
 {
-    [Authorize]
+    [ClipAuthorize]
     public class SessionController : Controller
     {
         /// <summary>
