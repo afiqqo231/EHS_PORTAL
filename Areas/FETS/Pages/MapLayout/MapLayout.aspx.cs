@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -16,6 +17,9 @@ namespace FETS.Pages.MapLayout
         // Properties to store user's assigned plant and role
         private int? UserPlantID { get; set; }
         private bool IsAdministrator { get; set; }
+        
+        protected string TypesJson {get; private set;}
+        protected string StatusesJson {get; private set;}
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -32,6 +36,7 @@ namespace FETS.Pages.MapLayout
             if (!IsPostBack)
             {
                 LoadDropDownLists();
+                LoadDropDownData();
                 LoadMaps();
             }
         }
@@ -245,6 +250,31 @@ namespace FETS.Pages.MapLayout
             {
                 System.Diagnostics.Debug.WriteLine($"Error in LoadDropDownLists: {ex.Message}");
                 throw;
+            }
+        }
+
+        protected void LoadDropDownData()
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                var types = new List<object>();
+                using (SqlCommand cmd = new SqlCommand("SELECT TypeID, TypeName FROM FETS.FireExtinguisherTypes ORDER BY TypeName", conn))
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                            types.Add(new { id = r.GetInt32(0), name = r.GetString(1) });
+                    }
+                var statuses = new List<object>();
+                using (SqlCommand cmd = new SqlCommand("SELECT StatusID, StatusName FROM FETS.Status ORDER BY StatusName", conn))
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                            statuses.Add(new { id = r.GetInt32(0), name = r.GetString(1) });
+                    }
+                TypesJson = Newtonsoft.Json.JsonConvert.SerializeObject(types);
+                StatusesJson = Newtonsoft.Json.JsonConvert.SerializeObject(statuses);
             }
         }
 

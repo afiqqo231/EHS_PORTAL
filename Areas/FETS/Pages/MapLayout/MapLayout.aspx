@@ -329,7 +329,7 @@
             background-color: #e74c3c;
             border: 2px solid #c0392b;
             border-radius: 50% 50% 50% 0;
-            transform: rotate(-45def);
+            transform: rotate(-45deg);
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
@@ -689,7 +689,54 @@
         </div>
     </div>
 
+    <div id="feEditModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6);">
+        <div style="background:white; margin:8% auto; padding:0; width:420px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+            <div style="padding:14px 20px; border-bottom:1px solid #dee2e6; display:flex; justify-content:space-betweem; align-items:center;">
+                <strong>Edit Fire Extinguisher</strong>
+                <span onclick="closeEditModal()" style="cursor:pointer; font-size:1.4rem; color:#aaa">&times;</span>
+            </div>
+
+            <div style="padding:20px;">
+                <input type="hidden" id="editFEID" />
+
+                <div class="form-group">
+                    <label>Serial Number</label>
+                    <input type="text" id="editSerial" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="editLocation" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="editType" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" id="editExpiry" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editStatus" class="form-control"></select>
+                </div>
+            </div>
+
+            <div style="padding:12px 20px; border-top:1px solid #dee2e6; text-align:right; background:#f8f9fa; border-radius:0 0 8px 8px;">
+                <span id="editSaveStatus" style="font-size:0.85rem; margin-right:10px;"></span>
+                <button onclick="closeEditModal()" style="padding:6px 14px; margin-right:8px; border:1px solid #ccc; background:white; border-radius:4px; cursor:pointer;">
+                    Cancel
+                </button>
+                <button onclick="saveEditedFE()" style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="text/javascript">
+        var feTypes = <%= TypesJson %>;
+        var feStatuses = <%= StatusesJson %>;
+
         function updateFileName(input) {
             var fileNameDisplay = document.getElementById('fileNameDisplay');
             var fileNameSpan = document.getElementById('fileName');
@@ -819,6 +866,11 @@
 
                         var icon= document.createElement('div');
                         icon.className = 'modal-marker-icon';
+
+                        marker.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            openEditModal(pin);
+                        });
                         var tooltip = document.createElement('div');
                         tooltip.className = 'modal-marker-tooltip';
                         tooltip.innerHTML = '<strong>' + pin.serial + '</strong><br>' + pin.type + '<br>' + pin.location + '<br>' + '<span style="color: ' + (pin.status.toLowerCase().includes('active') ? 'green' : 'red') + '">' + pin.status + '</span>';
@@ -831,6 +883,87 @@
                     console.error('GetPins failed:', err);
                 })
 
+        }
+
+        function openEditModal(pin)
+        {
+            document.getElementById('editFEID').value = pin.feId;
+            document.getElementById('editSerial').value = pin.serial;
+            document.getElementById('editLocation').value = pin.location;
+            document.getElementById('editExpiry').value = pin.expiry || '';
+
+            var typeSelect = document.getElementById('editType');
+            typeSelect.innerHTML = '';
+            feTypes.forEach(function (t) {
+                var opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.name;
+                if (t.name === pin.type) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+
+            var statusSelect = document.getElementById('editStatus');
+            statusSelect.innerHTML = '';
+            feStatuses.forEach(function (s) {
+                var opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                if (s.name === pin.status) opt.selected = true;
+                statusSelect.appendChild(opt);
+            });
+
+            document.getElementById('editSaveStatus').textContent = '';
+            document.getElementById('feEditModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('feEditModal').style.display = 'none';
+        }
+
+        function saveEditedFE() {
+            var feId = document.getElementById('editFEID').value;
+            var serial = document.getElementById('editSerial').value;
+            var location = document.getElementById('editLocation').value;
+            var typeId = document.getElementById('editType').value;
+            var expiry = document.getElementById('editExpiry').value;
+            var statusId = document.getElementById('editStatus').value;
+
+            if (!serial || !location) {
+                document.getElementById('editSaveStatus').textContent = 'Serial and Location are required.';
+                return;
+            }
+
+            var status = document.getElementById('editSaveStatus');
+            status.textContent = 'Saving ...';
+
+            var formData = new FormData();
+            formData.append('feid', feId);
+            formData.append('serial', serial);
+            formData.append('location', location);
+            formData.append('typeId', typeId);
+            formData.append('expiry', expiry);
+            formData.append('statusId', statusId);
+
+            fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/UpdateFE.ashx") %>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function (r) {
+                if (r.ok)
+                    return r.text();
+                throw new Error('Status ' + r.status);
+            })
+            .then(function (text) {
+                if (text === 'ok') {
+                    status.textContent = 'Saved!';
+                    setTimeout(closeEditModal, 1000);
+                } else {
+                    status.textContent = 'Failed! ' + text;
+                }
+            })
+            .catch(function (err) {
+                status.textContent = 'Error: ' + err.message;
+            });
         }
 
         // Fallback for browsers that don't support our modal
