@@ -96,6 +96,41 @@
             width: 100%;
         }
 
+        .map-magnifier-glass {
+            position: absolute;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: none;
+            width: 100px;
+            height: 100px;
+        }
+
+        .map-magnifier-glass::before,
+        .map-magnifier-glass::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+        }
+
+        /* horizontal arm */
+        .map-magnifier-glass::before {
+            top: 50%;
+            left: 15%;
+            width: 70%;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        /* vertical arm */
+        .map-magnifier-glass::after {
+            left: 50%;
+            top: 15%;
+            height: 70%;
+            width: 1px;
+            transform: translateX(-50%);
+        }
+
         .map-image {
             display: block;
             max-width: 100%;
@@ -113,20 +148,17 @@
 
         .marker {
             position: absolute;
-            width: 20px;
-            height: 20px;
-            transform: translate(-50%, -100%);
+            width: 8px;
+            height: 8px;
+            transform: translate(-50%, -50%);
             cursor: pointer;
             z-index: 10;
         }
 
         .marker-icon {
-            width: 20px;
-            height: 20px;
-            background-color: #e74c3c;
-            border: 2px solid #c0392b;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
@@ -157,6 +189,18 @@
 
         .marker.active .marker-info {
             display: block;
+        }
+
+        /* Small dot shown inside the magnifier glass when it hovers over a marker */
+        .ghost-marker-pin {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
         }
 
         .search-container {
@@ -301,8 +345,13 @@
             const mapWrapper  = document.querySelector(".map-wrapper");
             const mapImage    = document.getElementById("imgMap");
             const searchInput = document.getElementById("searchInput");
-            let markers = [];
+            window._feMarkers = [];
             let pinModeActive = false;
+
+            const MARKER_COLORS = {
+                active:   { bg: "#27ae60", border: "#1e8449" },
+                inactive: { bg: "#e74c3c", border: "#c0392b" }
+            };
 
             // ── Render pins from hidden GridView ──────────────────────────────
             // Pins use percentage (0.0–1.0) positioned on the wrapper.
@@ -312,6 +361,7 @@
                 const gridView = document.getElementById("<%= gvFireExtinguishers.ClientID %>");
                 if (!gridView) return;
 
+                const glass    = document.querySelector(".map-magnifier-glass");
                 const rows     = gridView.getElementsByTagName("tr");
                 const feSelect = document.getElementById("ddlSelectFE");
 
@@ -332,7 +382,7 @@
 
                     if (feData.pinX !== null && !isNaN(feData.pinX) &&
                         feData.pinY !== null && !isNaN(feData.pinY)) {
-                        createMarker(feData);
+                        createMarker(feData, glass);
                     }
 
                     if (feSelect) {
@@ -345,15 +395,20 @@
             }
 
             // ── Create marker at percentage position ──────────────────────────
-            function createMarker(feData) {
+            function createMarker(feData, glass) {
                 const div = document.createElement("div");
                 div.className    = "marker";
                 div.dataset.feId = feData.id;
                 div.style.left   = (feData.pinX * 100) + "%";
                 div.style.top    = (feData.pinY * 100) + "%";
 
+                var isActive = feData.status.toLowerCase().includes("active");
+                var colors   = isActive ? MARKER_COLORS.active : MARKER_COLORS.inactive;
+
                 const icon = document.createElement("div");
                 icon.className = "marker-icon";
+                icon.style.backgroundColor = colors.bg;
+                icon.style.border = "1.5px solid " + colors.border;
 
                 const info = document.createElement("div");
                 info.className = "marker-info";
@@ -362,9 +417,8 @@
                     "Type: "     + feData.type     + "<br>" +
                     "Location: " + feData.location + "<br>" +
                     "Expires: "  + feData.expiry   + "<br>" +
-                    "Status: <span style='color:" +
-                        (feData.status.toLowerCase().includes("active") ? "green" : "red") +
-                    "'>" + feData.status + "</span>";
+                    "Status: <span style='color:" + (isActive ? "green" : "red") + "'>" +
+                    feData.status + "</span>";
 
                 div.appendChild(icon);
                 div.appendChild(info);
@@ -378,12 +432,26 @@
                     div.classList.toggle("active");
                 });
 
-                markers.push({ element: div, data: feData });
+                // Glass is already in DOM — magnify() runs before DOMContentLoaded callbacks.
+                var ghost = null;
+                if (glass) {
+                    ghost = document.createElement("div");
+                    ghost.className = "ghost-marker-pin";
+                    ghost.style.backgroundColor = colors.bg;
+                    ghost.style.border = "1.5px solid " + colors.border;
+                    glass.appendChild(ghost);
+                }
+
+                window._feMarkers.push({ element: div, data: feData, ghost: ghost });
             }
 
             function removeMarker(feId) {
-                const m = markers.find(function (m) { return m.data.id === feId; });
-                if (m) { m.element.remove(); markers = markers.filter(function (x) { return x.data.id !== feId; }); }
+                const m = window._feMarkers.find(function (m) { return m.data.id === feId; });
+                if (m) {
+                    m.element.remove();
+                    if (m.ghost && m.ghost.parentElement) m.ghost.remove();
+                    window._feMarkers = window._feMarkers.filter(function (x) { return x.data.id !== feId; });
+                }
             }
 
             // ── Pin mode ──────────────────────────────────────────────────────
@@ -393,7 +461,7 @@
                 const controls = document.getElementById("pinModeControls");
 
                 if (pinModeActive) {
-                    btn.textContent           = "✅ Pin Mode ON — click to disable";
+                    btn.textContent           = "Pin Mode ON";
                     btn.style.backgroundColor = "#28a745";
                     btn.style.color           = "white";
                     controls.style.display    = "flex";
@@ -401,7 +469,7 @@
                     controls.style.gap        = "8px";
                     mapWrapper.style.cursor   = "crosshair";
                 } else {
-                    btn.textContent           = "📍 Enable Pin Placement";
+                    btn.textContent           = "Enable Pin Placement";
                     btn.style.backgroundColor = "";
                     btn.style.color           = "";
                     controls.style.display    = "none";
@@ -450,7 +518,7 @@
                                     location: cells[2].textContent.trim(), type: cells[3].textContent.trim(),
                                     expiry: cells[4].textContent.trim(), status: cells[5].textContent.trim(),
                                     pinX: pinX, pinY: pinY
-                                });
+                                }, document.querySelector(".map-magnifier-glass"));
                                 break;
                             }
                         }
@@ -464,7 +532,7 @@
             if (searchInput) {
                 searchInput.addEventListener("input", function () {
                     const term = this.value.toLowerCase();
-                    markers.forEach(function (m) {
+                    window._feMarkers.forEach(function (m) {
                         const match = !term ||
                             m.data.serial.toLowerCase().includes(term) ||
                             m.data.location.toLowerCase().includes(term) ||
@@ -486,6 +554,131 @@
             if (mapImage.complete) loadExtinguisherData();
             else mapImage.onload = loadExtinguisherData;
         });
+
+        function magnify(imgID, zoom) {
+            var img, glass, w, h, bw;
+            img = document.getElementById(imgID);
+
+            glass = document.createElement("DIV");
+            glass.setAttribute("class", "map-magnifier-glass");
+
+            img.parentElement.insertBefore(glass, img);
+
+            glass.style.backgroundImage = "url('" + img.src + "')";
+            glass.style.backgroundRepeat = "no-repeat";
+            bw = 3;
+            w = glass.offsetWidth / 2;
+            h = glass.offsetHeight / 2;
+
+            function applyBackgroundSize() {
+                glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+            }
+            // img.width is 0 if image hasn't loaded yet — set now if ready, otherwise wait.
+            if (img.complete && img.naturalWidth > 0) {
+                applyBackgroundSize();
+            } else {
+                img.addEventListener("load", applyBackgroundSize);
+            }
+
+            glass.addEventListener("mousemove", moveMagnifier);
+            img.addEventListener("mousemove", moveMagnifier);
+
+            // Hide all ghost dots when cursor leaves the image/glass
+            glass.addEventListener("mouseleave", hideGhosts);
+            img.addEventListener("mouseleave", hideGhosts);
+
+            function hideGhosts() {
+                window._feMarkers.forEach(function (m) {
+                    if (m.ghost) m.ghost.style.display = "none";
+                    m.element.style.visibility = "visible";
+                });
+            }
+
+            // Hold Ctrl to show magnifier; release to hide.
+            var magnifierEnabled = false;
+            var lastMouseEvent   = null;
+            glass.style.display  = "none";
+
+            img.addEventListener("mousemove", function (e) { lastMouseEvent = e; });
+
+            document.addEventListener("keydown", function (e) {
+                if (e.key !== "Control" || magnifierEnabled) return;
+                magnifierEnabled = true;
+                glass.style.display = "";
+                if (lastMouseEvent) moveMagnifier(lastMouseEvent);
+            });
+
+            document.addEventListener("keyup", function (e) {
+                if (e.key !== "Control") return;
+                magnifierEnabled = false;
+                glass.style.display = "none";
+                hideGhosts();
+            });
+
+            function moveMagnifier(e) {
+                if (!magnifierEnabled) return;
+                e.preventDefault();
+
+                var pos = getCursorPos(e);
+                var x = pos.x;
+                var y = pos.y;
+
+                if (x > img.width - (w / zoom)) {x = img.width - (w/zoom);}
+                if (x < w / zoom) { x = w /zoom;}
+                if (y > img.height - (h / zoom)) {y = img.height - (h/zoom);}
+                if (y < h / zoom) { y = h / zoom;}
+
+                glass.style.left = (x - w) + "px";
+                glass.style.top = (y - h) + "px";
+
+                glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+
+                // Map each marker's pixel position into glass-space coords and hide/show it.
+                // Marker (dx,dy) image-pixels from cursor center → (dx*zoom, dy*zoom) from glass center.
+                // hideRadiusSq  — physical glass boundary: hide marker as soon as glass overlaps it
+                // ghostRadiusSq — glass interior: show ghost dot only when it won't clip the circular border
+                var hideRadiusSq  = w * w * zoom * zoom;
+                var ghostRadiusSq = (w - 4) * (w - 4);
+                window._feMarkers.forEach(function (m) {
+                        var markerPxX = m.data.pinX * img.width;
+                        var markerPxY = m.data.pinY * img.height;
+
+                        var relX = (markerPxX - x) * zoom + w;
+                        var relY = (markerPxY - y) * zoom + h;
+
+                        var dx = relX - w;
+                        var dy = relY - h;
+                        var distSq = dx * dx + dy * dy;
+
+                        m.element.style.visibility = distSq < hideRadiusSq ? "hidden" : "visible";
+
+                        if (m.ghost) {
+                            var inGlass = distSq < ghostRadiusSq;
+                            m.ghost.style.display = inGlass ? "block" : "none";
+                            if (inGlass) {
+                                m.ghost.style.left = relX + "px";
+                                m.ghost.style.top  = relY + "px";
+                            }
+                        }
+                });
+            }
+
+            function getCursorPos(e) {
+                var a, x = 0, y = 0;
+                e = e || window.event;
+
+                a = img.getBoundingClientRect();
+
+                x = e.pageX - a.left;
+                y = e.pageY - a.top;
+
+                x = x - window.pageXOffset;
+                y = y - window.pageYOffset;
+                return {x: x, y: y};
+            }
+        }
+
+        magnify("imgMap", 2);
     </script>
 </body>
 </html>
