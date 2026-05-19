@@ -349,6 +349,7 @@
     <Content Include="Areas\CORD\Views\AttendanceHistory\_EditModal.cshtml" />
     <Content Include="Areas\FETS\Pages\MapLayout\GetPins.ashx" />
     <Content Include="Areas\FETS\Pages\MapLayout\UpdateFE.ashx" />
+    <Content Include="Areas\FETS\Pages\MapLayout\RemovePin.ashx" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -617,6 +618,9 @@
     <Compile Include="Areas\CLIP\Services\ActivityLogger.cs" />
     <Compile Include="Areas\FETS\Pages\MapLayout\GetPins.ashx.cs">
       <DependentUpon>GetPins.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\FETS\Pages\MapLayout\RemovePin.ashx.cs">
+      <DependentUpon>RemovePin.ashx</DependentUpon>
     </Compile>
     <Compile Include="Areas\FETS\Pages\MapLayout\SavePin.ashx.cs">
       <DependentUpon>SavePin.ashx</DependentUpon>
