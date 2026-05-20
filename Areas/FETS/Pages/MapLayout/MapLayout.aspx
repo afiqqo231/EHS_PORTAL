@@ -1,6 +1,7 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="MapLayout.aspx.cs" Inherits="FETS.Pages.MapLayout.MapLayout" MasterPageFile="~/Areas/FETS/Site.Master" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
     <style>
         /* Base styles to match View Section and Data Entry */
         .dashboard-container {
@@ -914,7 +915,8 @@
 
         var MODAL_MARKER_COLORS = {
             active:   { bg: '#27ae60', border: '#1e8449' },
-            inactive: { bg: '#e74c3c', border: '#c0392b' }
+            inactive: { bg: '#e74c3c', border: '#c0392b' },
+            service: { bg: '#f39c12', border: '#d68910' }
         };
 
         function loadModalPins(plantId, levelId) {
@@ -995,7 +997,9 @@
                 .then(function(pins) {
                     pins.forEach(function(pin) {
                         var isActive = pin.status.toLowerCase().includes('active');
+                        var isService = pin.status.toLowerCase().includes('servicing');
                         var colors   = isActive ? MODAL_MARKER_COLORS.active : MODAL_MARKER_COLORS.inactive;
+                        if (isService) colors = MODAL_MARKER_COLORS.service;
 
                         var marker = document.createElement('div');
                         marker.className  = 'modal-marker';
@@ -1014,7 +1018,7 @@
                             'Type: ' + pin.type + '<br>' +
                             'Location: ' + pin.location + '<br>' +
                             'Expires: ' + (pin.expiry || 'N/A') + '<br>' +
-                            'Status: <span style="color:' + (isActive ? 'green' : 'red') + '">' + pin.status + '</span>';
+                            'Status: <span class="badge ' + (isActive ? 'text-bg-success' : (isService ? 'text-bg-warning' : 'text-bg-danger')) + '">' + pin.status + '</span>';
 
                         marker.appendChild(icon);
                         marker.appendChild(info);
@@ -1053,7 +1057,13 @@
             document.getElementById('editFEID').value = pin.feId;
             document.getElementById('editSerial').value = pin.serial;
             document.getElementById('editLocation').value = pin.location;
-            document.getElementById('editExpiry').value = pin.expiry || '';
+            // Convert dd/MM/yyyy → yyyy-MM-dd for <input type="date">
+            if (pin.expiry) {
+                var parts = pin.expiry.split('/');
+                document.getElementById('editExpiry').value = parts[2] + '-' + parts[1] + '-' + parts[0];
+            } else {
+                document.getElementById('editExpiry').value = '';
+            }
 
             var typeSelect = document.getElementById('editType');
             typeSelect.innerHTML = '';

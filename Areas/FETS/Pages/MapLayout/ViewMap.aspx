@@ -4,6 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>View Map - FETS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="<%= ResolveUrl("~/Areas/FETS/Assets/css/styles.css") %>" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
@@ -43,12 +44,13 @@
             color: #aaa;
         }
 
-        .btn-close {
+        .btn-tab {
             padding: 0.5rem 1rem;
             border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 15px;
             font-weight: 500;
             color: white;
+            width: 120px;
             text-decoration: none;
             transition: all 0.2s ease;
         }
@@ -300,18 +302,26 @@
 
         .marker {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
             transform: translate(-50%, -50%);
             cursor: pointer;
             z-index: 10;
         }
 
         .marker-icon {
-            width: 8px;
-            height: 8px;
+            width: 15px;
+            height: 15px;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .marker-icon {
+            transition: transform 0.15s ease;
+        }
+
+        .marker-icon:hover {
+            transform: scale(1.5);
         }
 
         .marker-info {
@@ -346,8 +356,8 @@
         /* Small dot shown inside the magnifier glass when it hovers over a marker */
         .ghost-marker-pin {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 15px;
+            height: 15px;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -406,7 +416,7 @@
                 <h2>Map Layout for: <asp:Label ID="lblPlantNameHeader" runat="server"></asp:Label></h2>
                 <div class="user-info">
                     <label>User: <asp:Label ID="lblUsername" runat="server"></asp:Label></label>
-                    <a href="javascript:window.close()" class="btn btn-close btn-warning">Close Tab</a>
+                    <a href="javascript:window.close()" class="btn btn-tab btn-warning">Close Tab</a>
                 </div>
             </header>
 
@@ -497,7 +507,8 @@
 
             const MARKER_COLORS = {
                 active:   { bg: "#27ae60", border: "#1e8449" },
-                inactive: { bg: "#e74c3c", border: "#c0392b" }
+                inactive: { bg: "#e74c3c", border: "#c0392b" },
+                service: { bg: "#f39c12", border: "#d68910" }
             };
 
             // ── Render pins from hidden GridView ──────────────────────────────
@@ -554,7 +565,8 @@
                 div.style.top    = (feData.pinY * 100) + "%";
 
                 var isActive = feData.status.toLowerCase().includes("active");
-                var colors   = isActive ? MARKER_COLORS.active : MARKER_COLORS.inactive;
+                var isService = feData.status.toLowerCase().includes("servicing");
+                var colors   = isActive ? MARKER_COLORS.active : (isService ? MARKER_COLORS.service : MARKER_COLORS.inactive);
 
                 const icon = document.createElement("div");
                 icon.className = "marker-icon";
@@ -568,7 +580,7 @@
                     "Type: "     + feData.type     + "<br>" +
                     "Location: " + feData.location + "<br>" +
                     "Expires: "  + feData.expiry   + "<br>" +
-                    "Status: <span style='color:" + (isActive ? "green" : "red") + "'>" +
+                    "Status: <span class='badge " + (isActive ? "text-bg-success" : (isService ? "text-bg-warning" : "text-bg-danger")) + "'>" +
                     feData.status + "</span>";
 
                 div.appendChild(icon);
@@ -933,5 +945,6 @@
             document.querySelector(".map-context-menu").classList.remove("visible");
         })
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
