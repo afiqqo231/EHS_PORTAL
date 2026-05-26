@@ -20,6 +20,19 @@
     var completedPercent = recordCount > 0 ? (int)Math.Round((double)completedCount / recordCount * 100) : 0;
     var inProgressPercent = recordCount > 0 ? (int)Math.Round((double)(workInProgressCount + eprRaisedCount + quotationRequestedCount) / recordCount * 100) : 0;
     var notStartedPercent = recordCount > 0 ? (int)Math.Round((double)notStartedCount / recordCount * 100) : 0;
+
+    var selectedPlantFilter = ViewBag.SelectedPlantFilter as string;
+    var selectedPlantIds = new HashSet<int>();
+    if (!string.IsNullOrWhiteSpace(selectedPlantFilter))
+    {
+        foreach (var value in selectedPlantFilter.Split(','))
+        {
+            if (int.TryParse(value, out int plantId))
+            {
+                selectedPlantIds.Add(plantId);
+            }
+        }
+    }
 }
 
 <div class="container-fluid py-4">
@@ -135,24 +148,24 @@
 
             <div class="mt-3">
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="javascript:void(0)" onclick="updatePlantFilter('')" 
-                        class="btn @(ViewBag.SelectedPlantFilter == null || ViewBag.SelectedPlantFilter == "" ? "btn-primary" : "btn-outline-primary")">
+                    <a href="javascript:void(0)" onclick="clearPlantFilters()" 
+                        class="btn @(selectedPlantIds.Count == 0 ? "btn-primary" : "btn-outline-primary")">
                         <i class="bi bi-buildings"></i> All Plants
                     </a>
-                    <a href="javascript:void(0)" onclick="updatePlantFilter('1,3,6')" 
-                        class="btn @(ViewBag.SelectedPlantFilter == "1,3,6" ? "btn-primary" : "btn-outline-primary")">
+                    <a href="javascript:void(0)" onclick="togglePlantFilter('1,3,6')" 
+                        class="btn plant-filter-btn @(selectedPlantIds.Contains(1) && selectedPlantIds.Contains(3) && selectedPlantIds.Contains(6) ? "btn-primary" : "btn-outline-primary")" data-plant-ids="1,3,6">
                         <i class="bi bi-buildings"></i> P1, P3, P5
                     </a>
-                    <a href="javascript:void(0)" onclick="updatePlantFilter('4')" 
-                        class="btn @(ViewBag.SelectedPlantFilter == "4" ? "btn-primary" : "btn-outline-primary")">
+                    <a href="javascript:void(0)" onclick="togglePlantFilter('4')" 
+                        class="btn plant-filter-btn @(selectedPlantIds.Contains(4) ? "btn-primary" : "btn-outline-primary")" data-plant-ids="4">
                         <i class="bi bi-buildings"></i> P21
                     </a>
-                    <a href="javascript:void(0)" onclick="updatePlantFilter('2,7')" 
-                        class="btn @(ViewBag.SelectedPlantFilter == "2,7" ? "btn-primary" : "btn-outline-primary")">
+                    <a href="javascript:void(0)" onclick="togglePlantFilter('2,7')" 
+                        class="btn plant-filter-btn @(selectedPlantIds.Contains(2) && selectedPlantIds.Contains(7) ? "btn-primary" : "btn-outline-primary")" data-plant-ids="2,7">
                         <i class="bi bi-buildings"></i> P13, P55
                     </a>
-                    <a href="javascript:void(0)" onclick="updatePlantFilter('5')" 
-                        class="btn @(ViewBag.SelectedPlantFilter == "5" ? "btn-primary" : "btn-outline-primary")">
+                    <a href="javascript:void(0)" onclick="togglePlantFilter('5')" 
+                        class="btn plant-filter-btn @(selectedPlantIds.Contains(5) ? "btn-primary" : "btn-outline-primary")" data-plant-ids="5">
                         <i class="bi bi-buildings"></i> P34
                     </a>
                 </div>
@@ -375,7 +388,81 @@
             }
         });
         
-        // Function to update plant filter and submit the form
+        function getSelectedPlantIds() {
+            var rawValue = $("#hiddenPlantFilter").val();
+
+            if (!rawValue) {
+                return [];
+            }
+
+            return rawValue
+                .split(',')
+                .map(function(value) { return parseInt(value, 10); })
+                .filter(function(value) { return !isNaN(value); });
+        }
+
+        function syncPlantButtonStyles(selectedIds) {
+            $(".plant-filter-btn").each(function() {
+                var plantIds = ($(this).data("plant-ids") || "").toString().split(',').map(function(value) {
+                    return parseInt(value, 10);
+                }).filter(function(value) {
+                    return !isNaN(value);
+                });
+
+                var isSelected = plantIds.length > 0 && plantIds.every(function(plantId) {
+                    return selectedIds.indexOf(plantId) !== -1;
+                });
+                $(this)
+                    .toggleClass("btn-primary", isSelected)
+                    .toggleClass("btn-outline-primary", !isSelected);
+            });
+        }
+
+        function setSelectedPlantIds(plantIds) {
+            var normalizedIds = plantIds
+                .filter(function(value, index, self) { return self.indexOf(value) === index; })
+                .sort(function(a, b) { return a - b; });
+
+            $("#hiddenPlantFilter").val(normalizedIds.join(','));
+            syncPlantButtonStyles(normalizedIds);
+            $(".filter-form").submit();
+        }
+
+        function togglePlantFilter(filterValue) {
+            var plantIds = getSelectedPlantIds();
+            var filterIds = filterValue
+                .toString()
+                .split(',')
+                .map(function(value) { return parseInt(value, 10); })
+                .filter(function(value) { return !isNaN(value); });
+
+            var isFullySelected = filterIds.length > 0 && filterIds.every(function(plantId) {
+                return plantIds.indexOf(plantId) !== -1;
+            });
+
+            if (isFullySelected) {
+                plantIds = plantIds.filter(function(plantId) {
+                    return filterIds.indexOf(plantId) === -1;
+                });
+            } else {
+                filterIds.forEach(function(plantId) {
+                    if (plantIds.indexOf(plantId) === -1) {
+                        plantIds.push(plantId);
+                    }
+                });
+            }
+
+            setSelectedPlantIds(plantIds);
+        }
+
+        function clearPlantFilters() {
+            setSelectedPlantIds([]);
+        }
+
+        $(document).ready(function() {
+            syncPlantButtonStyles(getSelectedPlantIds());
+        });
+
         function updatePlantFilter(filterValue) {
             $("#hiddenPlantFilter").val(filterValue);
             $(".filter-form").submit();
