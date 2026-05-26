@@ -198,6 +198,7 @@
                 <table class="table table-bordered table-hover" id="recordsTable" width="100%" cellspacing="0">
                     <thead class="table-light">
                         <tr>
+                            <th class="text-center">No.</th>
                             <th>Monitoring Type</th>
                             <th>Category</th>
                             <th>Plant</th>
@@ -210,9 +211,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @{ var rowNumber = 1; }
                         @foreach (var item in Model)
                         {
                             <tr>
+                                <td class="text-center">@rowNumber.</td>
                                 <td>@item.Monitoring.MonitoringName</td>
                                 <td>@item.Monitoring.MonitoringCategory</td>
                                 <td>@item.Plant.PlantName</td>
@@ -286,6 +289,7 @@
                                     </div>
                                 </td>
                             </tr>
+                            rowNumber++;
                         }
                     </tbody>
                 </table>
