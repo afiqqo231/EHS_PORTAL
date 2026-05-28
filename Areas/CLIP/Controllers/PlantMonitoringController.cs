@@ -55,7 +55,12 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
             if (!string.IsNullOrEmpty(plantFilter))
             {
                 // Handle both old (concatenated) and new (comma-separated) formats
-                var plantIds = plantFilter.Split(',').Select(p => int.TryParse(p, out int id) ? id : -1).Where(id => id != -1).ToList();
+                var plantIds = plantFilter
+                    .Split(',')
+                    .Select(p => int
+                    .TryParse(p, out int id) ? id : -1)
+                    .Where(id => id != -1)
+                    .ToList();
                 
                 if (plantIds.Any())
                 {
