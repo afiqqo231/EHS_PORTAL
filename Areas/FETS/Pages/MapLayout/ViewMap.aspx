@@ -9,15 +9,13 @@
     <link href="<%= ResolveUrl("~/Areas/FETS/Assets/css/styles.css") %>" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
     <style>
-        header > 
-
         .dashboard-container {
             min-height: 100vh;
             background-color: #f5f6fa;
         }
 
         .dashboard-header {
-            background: #1a2e4a;
+            background-color: #007bff;
             padding: 1rem 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
@@ -41,7 +39,7 @@
         }
 
         .user-info label {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.75);
         }
 
         .btn-tab {
@@ -55,7 +53,7 @@
             transition: all 0.2s ease;
         }
 
-        .btn-close:hover {
+        .btn-tab:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
             color: white;
@@ -73,6 +71,8 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             background: #f8f8f8;
+            padding: 0;
+            text-align: left;
         }
 
         .map-section {
@@ -101,8 +101,8 @@
         /* map-wrapper sizes itself to the image naturally */
         .map-wrapper {
             position: relative;
-            display: inline-block;
-            width: 100%;
+            display: block;
+            user-select: none;
         }
 
         .map-magnifier-glass {
@@ -142,7 +142,7 @@
 
         .map-image {
             display: block;
-            max-width: 100%;
+            width: 100%;
             height: auto;
         }
 
@@ -300,42 +300,46 @@
         }
 
 
+
         .marker {
             position: absolute;
+            width: 24px;
+            height: 24px;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+
+        body.dragging-marker * {
+            cursor: grabbing !important;
+        }
+
+        .marker-icon {
             width: 12px;
             height: 12px;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .marker-icon {
-            width: 15px;
-            height: 15px;
             border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .marker-icon {
-            transition: transform 0.15s ease;
-        }
-
-        .marker-icon:hover {
-            transform: scale(1.5);
+            box-shadow: 0 0 4px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: grab;
         }
 
         .marker-info {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
+            transform: translate(-50%, calc(-100% - 8px));
             background: white;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             padding: 10px;
             width: 200px;
             display: none;
-            z-index: 20;
+            z-index: 9999;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            text-align: left;
+            pointer-events: none;
         }
 
         .marker-info:after {
@@ -349,8 +353,8 @@
             border-color: white transparent transparent transparent;
         }
 
-        .marker.active .marker-info {
-            display: block;
+        .marker.active {
+            z-index: 100;
         }
 
         /* Small dot shown inside the magnifier glass when it hovers over a marker */
@@ -429,11 +433,11 @@
                                 <asp:Label ID="lblPlantName" runat="server"></asp:Label> -
                                 <asp:Label ID="lblLevelName" runat="server"></asp:Label>
                             </h3>
-                            <div style="display:flex; align-items:center; gap:1rem;">
-                                <span style="font-size:0.9rem; color:#555;">
+                            <div class="map-header-meta">
+                                <span class="fe-count">
                                     FE Count: <asp:Label ID="lblFECount" runat="server">0</asp:Label>
                                 </span>
-                                <div class="last-updated" style="position:static;">
+                                <div class="last-updated">
                                     Last Updated: <asp:Label ID="lblLastUpdated" runat="server"></asp:Label>
                                 </div>
                             </div>
@@ -504,6 +508,11 @@
             const mapImage    = document.getElementById("imgMap");
             window._feMarkers = [];
             let pinModeActive = false;
+            var _drag = null;
+            var _suppressNextClick = false;
+
+            mapWrapper.addEventListener("dragstart", function(e) { e.preventDefault(); });
+            mapImage.draggable = false;
 
             const MARKER_COLORS = {
                 active:   { bg: "#27ae60", border: "#1e8449" },
@@ -583,16 +592,56 @@
                     "Status: <span class='badge " + (isActive ? "text-bg-success" : (isService ? "text-bg-warning" : "text-bg-danger")) + "'>" +
                     feData.status + "</span>";
 
+                div.addEventListener("dragstart", function(e) { e.preventDefault(); });
+
+                div.addEventListener("mousedown", function(e) {
+                    if (e.button !== 0) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var rect = mapImage.getBoundingClientRect();
+                    var cursorX = (e.clientX - rect.left) / rect.width;
+                    var cursorY = (e.clientY - rect.top)  / rect.height;
+                    var markerX = parseFloat(div.style.left) / 100;
+                    var markerY = parseFloat(div.style.top)  / 100;
+                    _drag = {
+                        markerEl: div,
+                        feId: feData.id,
+                        imgEl: mapImage,
+                        hasMoved: false,
+                        offsetX: markerX - cursorX,
+                        offsetY: markerY - cursorY
+                    };
+                    document.body.classList.add('dragging-marker');
+                });
+
+                function positionInfo() {
+                    var r = icon.getBoundingClientRect();
+                    info.style.left = (r.left + r.width / 2) + "px";
+                    info.style.top  = r.top + "px";
+                }
+
                 div.appendChild(icon);
-                div.appendChild(info);
                 mapWrapper.appendChild(div);
+                document.body.appendChild(info);
 
                 div.addEventListener("click", function (e) {
+                    if (_suppressNextClick) { _suppressNextClick = false; return; }
                     if (pinModeActive) return;
                     e.stopPropagation();
-                    document.querySelectorAll(".marker.active")
-                            .forEach(function (m) { if (m !== div) m.classList.remove("active"); });
-                    div.classList.toggle("active");
+                    document.querySelectorAll(".marker.active").forEach(function (m) {
+                        if (m !== div) {
+                            m.classList.remove("active");
+                            var other = window._feMarkers.find(function(x) { return x.element === m; });
+                            if (other && other.infoEl) other.infoEl.style.display = "none";
+                        }
+                    });
+                    var isNowActive = div.classList.toggle("active");
+                    if (isNowActive) {
+                        positionInfo();
+                        info.style.display = "block";
+                    } else {
+                        info.style.display = "none";
+                    }
                 });
 
                 div.addEventListener("contextmenu", function (e) {
@@ -622,7 +671,7 @@
                     glass.appendChild(ghost);
                 }
 
-                window._feMarkers.push({ element: div, data: feData, ghost: ghost });
+                window._feMarkers.push({ element: div, data: feData, ghost: ghost, infoEl: info });
             }
 
             function removeMarker(feId) {
@@ -630,6 +679,7 @@
                 if (m) {
                     m.element.remove();
                     if (m.ghost && m.ghost.parentElement) m.ghost.remove();
+                    if (m.infoEl && m.infoEl.parentElement) m.infoEl.remove();
                     window._feMarkers = window._feMarkers.filter(function (x) { return x.data.id !== feId; });
                 }
             }
@@ -780,10 +830,51 @@
                 });
             })
 
+            document.addEventListener("mousemove", function(e) {
+                if (!_drag) return;
+                var rect = _drag.imgEl.getBoundingClientRect();
+                var cursorX = (e.clientX - rect.left) / rect.width;
+                var cursorY = (e.clientY - rect.top)  / rect.height;
+                var x = Math.max(0, Math.min(1, cursorX + _drag.offsetX));
+                var y = Math.max(0, Math.min(1, cursorY + _drag.offsetY));
+                _drag.markerEl.style.left = (x * 100) + '%';
+                _drag.markerEl.style.top  = (y * 100) + '%';
+                _drag.hasMoved = true;
+            });
+
+            document.addEventListener("mouseup", function(e) {
+                if (!_drag) return;
+                var d = _drag;
+                _drag = null;
+                document.body.classList.remove('dragging-marker');
+
+                if (!d.hasMoved) return;
+
+                _suppressNextClick = true;
+
+                var x = parseFloat(d.markerEl.style.left) / 100;
+                var y = parseFloat(d.markerEl.style.top)  / 100;
+
+                var fd = new FormData();
+                fd.append("feId", d.feId);
+                fd.append("pinX", x);
+                fd.append("pinY", y);
+
+                var savedX = x, savedY = y;
+                fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/SavePin.ashx") %>', { method: "POST", body: fd })
+                    .then(function(r) { return r.text(); })
+                    .then(function(t) {
+                        if (t.trim() !== "ok") { console.error("SavePin failed", t); return; }
+                        var m = window._feMarkers.find(function(m) { return m.data.id === d.feId; });
+                        if (m) { m.data.pinX = savedX; m.data.pinY = savedY; }
+                    })
+                    .catch(function(err) { console.error("SavePin drag error", err); });
+            });
+
             document.addEventListener("click", function (e) {
                 if (!e.target.closest(".marker")) {
-                    document.querySelectorAll(".marker.active")
-                            .forEach(function (m) { m.classList.remove("active"); });
+                    document.querySelectorAll(".marker.active").forEach(function (m) { m.classList.remove("active"); });
+                    window._feMarkers.forEach(function (m) { if (m.infoEl) m.infoEl.style.display = "none"; });
                 }
             });
 
@@ -886,8 +977,8 @@
                 var hideRadiusSq  = w * w * zoom * zoom;
                 var ghostRadiusSq = (w - 4) * (w - 4);
                 window._feMarkers.forEach(function (m) {
-                        var markerPxX = m.data.pinX * img.width;
-                        var markerPxY = m.data.pinY * img.height;
+                        var markerPxX = (parseFloat(m.element.style.left) / 100) * img.width;
+                        var markerPxY = (parseFloat(m.element.style.top)  / 100) * img.height;
 
                         var relX = (markerPxX - x) * zoom + w;
                         var relY = (markerPxY - y) * zoom + h;

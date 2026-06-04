@@ -1,7 +1,6 @@
 <%@ Page Language="C#" AutoEventWireup="true" CodeBehind="MapLayout.aspx.cs" Inherits="FETS.Pages.MapLayout.MapLayout" MasterPageFile="~/Areas/FETS/Site.Master" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
     <style>
         /* Base styles to match View Section and Data Entry */
         .dashboard-container {
@@ -317,18 +316,22 @@
 
         .modal-marker {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 14px;
+            height: 14px;
             transform: translate(-50%, -50%);
             cursor: default;
             z-index: 10;
         }
 
         .modal-marker-icon {
-            width: 8px;
-            height: 8px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .modal-marker-icon:hover {
+            transform: scale(1.5);
         }
 
         .modal-marker-info {
@@ -360,14 +363,18 @@
             border-color: white transparent transparent transparent;
         }
 
+        .modal-marker:hover {
+            z-index: 100;
+        }
+
         .modal-marker:hover .modal-marker-info {
             display: block;
         }
 
         .modal-ghost-marker-pin {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -864,6 +871,8 @@
             btnFullView.href = '<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/ViewMap.aspx") %>?PlantID=' + plantId + '&LevelID=' + levelId;
             
             // Load Fire Extinguisher pins
+            _modalPlantId = plantId;
+            _modalLevelId = levelId;
             document.getElementById('modalMarkersContainer').innerHTML = '';
             fullScreenMap.onload = function () {
                 loadModalPins(plantId, levelId);
@@ -912,6 +921,8 @@
         var _modalGlass = null;
         var _modalMagnifierEnabled = false;
         var _modalLastMouseEvent = null;
+        var _modalPlantId = null;
+        var _modalLevelId = null;
 
         var MODAL_MARKER_COLORS = {
             active:   { bg: '#27ae60', border: '#1e8449' },
@@ -1129,6 +1140,7 @@
             .then(function (text) {
                 if (text === 'ok') {
                     status.textContent = 'Saved!';
+                    if (_modalPlantId && _modalLevelId) loadModalPins(_modalPlantId, _modalLevelId);
                     setTimeout(closeEditModal, 1000);
                 } else {
                     status.textContent = 'Failed! ' + text;
