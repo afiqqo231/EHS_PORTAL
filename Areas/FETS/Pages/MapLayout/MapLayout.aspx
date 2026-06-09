@@ -312,6 +312,7 @@
         .map-modal-body {
             padding: 20px;
             text-align: center;
+            width: 100%;
         }
 
         .modal-marker {
@@ -747,11 +748,11 @@
         </div>
     </div>
 
-    <div id="feEditModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6);">
-        <div style="background:white; margin:8% auto; padding:0; width:420px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
-            <div style="padding:14px 20px; border-bottom:1px solid #dee2e6; display:flex; justify-content:space-betweem; align-items:center;">
+    <div id="feEditModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+        <div style="background:white; margin:0; padding:0; width:420px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+            <div style="padding:14px 20px; border-bottom:1px solid #dee2e6; position:relative; text-align:center;">
                 <strong>Edit Fire Extinguisher</strong>
-                <span onclick="closeEditModal()" style="cursor:pointer; font-size:1.4rem; color:#aaa">&times;</span>
+                <span onclick="closeEditModal()" style="cursor:pointer; font-size:1.4rem; color:#aaa; position:absolute; right:16px; top:50%; transform:translateY(-50%)">&times;</span>
             </div>
 
             <div style="padding:20px;">
@@ -776,6 +777,10 @@
                 <div class="form-group">
                     <label>Status</label>
                     <select id="editStatus" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <textarea id="editRemarks" class="form-control" rows="3"></textarea>
                 </div>
             </div>
 
@@ -1033,6 +1038,13 @@
 
                         marker.appendChild(icon);
                         marker.appendChild(info);
+                        if (pin.remarks != '') {
+                            var remarks = document.createElement('div');
+                            remarks.style.marginTop = '6px';
+                            remarks.style.fontStyle = 'italic';
+                            remarks.textContent = '* ' + pin.remarks;
+                            info.appendChild(remarks);
+                        }
                         container.appendChild(marker);
 
                         marker.addEventListener('click', function(e) {
@@ -1075,6 +1087,7 @@
             } else {
                 document.getElementById('editExpiry').value = '';
             }
+           document.getElementById('editRemarks').value = pin.remarks;
 
             var typeSelect = document.getElementById('editType');
             typeSelect.innerHTML = '';
@@ -1097,7 +1110,7 @@
             });
 
             document.getElementById('editSaveStatus').textContent = '';
-            document.getElementById('feEditModal').style.display = 'block';
+            document.getElementById('feEditModal').style.display = 'flex';
         }
 
         function closeEditModal() {
@@ -1111,6 +1124,7 @@
             var typeId = document.getElementById('editType').value;
             var expiry = document.getElementById('editExpiry').value;
             var statusId = document.getElementById('editStatus').value;
+            var remarks = document.getElementById('editRemarks').value;
 
             if (!serial || !location) {
                 document.getElementById('editSaveStatus').textContent = 'Serial and Location are required.';
@@ -1127,6 +1141,7 @@
             formData.append('typeId', typeId);
             formData.append('expiry', expiry);
             formData.append('statusId', statusId);
+            formData.append('remarks', remarks);
 
             fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/UpdateFE.ashx") %>', {
                 method: 'POST',

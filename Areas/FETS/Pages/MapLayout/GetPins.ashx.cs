@@ -39,7 +39,7 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
                 {
                     conn.Open();
                     string sql = @"
-                        SELECT fe.FEID, fe.SerialNumber, fe.Location, t.TypeName, s.StatusName, fe.PinX, fe.PinY, fe.DateExpired
+                        SELECT fe.FEID, fe.SerialNumber, fe.Location, t.TypeName, s.StatusName, fe.PinX, fe.PinY, fe.DateExpired, fe.Remarks
                         FROM FETS.FireExtinguishers fe
                         INNER JOIN FETS.FireExtinguisherTypes t ON fe.TypeID = t.TypeID
                         INNER JOIN FETS.Status s ON fe.StatusID = s.StatusID
@@ -66,7 +66,8 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
                                     status = reader.GetString(4),
                                     pinX = Convert.ToDouble(reader["PinX"]),
                                     pinY = Convert.ToDouble(reader["PinY"]),
-                                    expiry = reader.IsDBNull(7) ? "" : Convert.ToDateTime(reader[7]).ToString("dd/MM/yyyy")
+                                    expiry = reader.IsDBNull(7) ? "" : Convert.ToDateTime(reader[7]).ToString("dd/MM/yyyy"),
+                                    remarks = reader.IsDBNull(8) ? "" : reader.GetString(8)
                                 });
                             }
                         }

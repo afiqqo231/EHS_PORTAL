@@ -603,13 +603,17 @@
                     var cursorY = (e.clientY - rect.top)  / rect.height;
                     var markerX = parseFloat(div.style.left) / 100;
                     var markerY = parseFloat(div.style.top)  / 100;
+                    info.style.display = "none";
+                    div.classList.remove("active");
                     _drag = {
                         markerEl: div,
                         feId: feData.id,
                         imgEl: mapImage,
                         hasMoved: false,
                         offsetX: markerX - cursorX,
-                        offsetY: markerY - cursorY
+                        offsetY: markerY - cursorY,
+                        oldX: markerX,
+                        oldY: markerY
                     };
                     document.body.classList.add('dragging-marker');
                 });
@@ -619,6 +623,12 @@
                     info.style.left = (r.left + r.width / 2) + "px";
                     info.style.top  = r.top + "px";
                 }
+
+                window.addEventListener("scroll", function() {
+                    if (info.style.display === "block") {
+                        positionInfo();   // reanchor to marker's new viewport position
+                    }
+                }, true);
 
                 div.appendChild(icon);
                 mapWrapper.appendChild(div);
@@ -868,10 +878,16 @@
                         var m = window._feMarkers.find(function(m) { return m.data.id === d.feId; });
                         if (m) { m.data.pinX = savedX; m.data.pinY = savedY; }
                     })
-                    .catch(function(err) { console.error("SavePin drag error", err); });
+                    .catch(function(err) { 
+                        console.error("SavePin drag error", err);
+                        d.markerEl.style.left = (d.oldX * 100) + '%';
+                        d.markerEl.style.top  = (d.oldY * 100) + '%';
+                        alert("Error saving pin position. It has been reset to its original location.");
+                    });
             });
 
             document.addEventListener("click", function (e) {
+                _suppressNextClick = false;
                 if (!e.target.closest(".marker")) {
                     document.querySelectorAll(".marker.active").forEach(function (m) { m.classList.remove("active"); });
                     window._feMarkers.forEach(function (m) { if (m.infoEl) m.infoEl.style.display = "none"; });

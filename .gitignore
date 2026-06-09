@@ -68,6 +68,9 @@ Pdftemplates/
 # Agreements signed by users
 Agreements/
 
+# Maps
+Uploads/Maps/
+
 # local configuration
 CLAUDE.md
 App_Data/CORD/
