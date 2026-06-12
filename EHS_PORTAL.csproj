@@ -691,6 +691,10 @@
       <DependentUpon>202604210923068_AddTableAttendanceHistory.cs</DependentUpon>
     </Compile>
     <Compile Include="Areas\CORD\Migrations\Configuration.cs" />
+    <Compile Include="Migrations\202606101006179_AddIsActiveToUser.cs" />
+    <Compile Include="Migrations\202606101006179_AddIsActiveToUser.Designer.cs">
+      <DependentUpon>202606101006179_AddIsActiveToUser.cs</DependentUpon>
+    </Compile>
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -837,6 +841,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\CORD\Migrations\202604210923068_AddTableAttendanceHistory.resx">
       <DependentUpon>202604210923068_AddTableAttendanceHistory.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202606101006179_AddIsActiveToUser.resx">
+      <DependentUpon>202606101006179_AddIsActiveToUser.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

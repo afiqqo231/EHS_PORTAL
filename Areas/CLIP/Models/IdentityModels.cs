@@ -19,6 +19,7 @@ namespace EHS_PORTAL.Areas.CLIP.Models
         public int? Atom_CEP { get; set; }
         public int? DOE_CPD { get; set; }
         public int? Dosh_CEP { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public virtual ICollection<UserPlant> UserPlants { get; set; }
         public virtual ICollection<UserCompetency> UserCompetencies { get; set; }

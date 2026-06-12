@@ -173,6 +173,9 @@ namespace EHS_PORTAL.Areas.CLIP.Models
 
         [Display(Name = "Access Failed Count")]
         public int AccessFailedCount { get; set; }
+
+        [Display(Name = "Account Status")]
+        public bool IsActive { get; set; }
     }
 
     public class EditProfileViewModel

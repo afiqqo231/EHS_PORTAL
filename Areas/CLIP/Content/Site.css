@@ -22,6 +22,14 @@ textarea {
 /* Custom status background */
 .bg-notstarted {
     background-color:rgb(94, 96, 110) !important;
+}
 
+/* Deactivated user row */
+.user-inactive td {
+    opacity: 0.55;
+    background-color: #f8f9fa;
+}
+.user-inactive td:first-child {
+    border-left: 3px solid #6c757d;
 }
 
