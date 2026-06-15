@@ -4,6 +4,19 @@
     ViewBag.Title = "Certificates of Fitness";
     // Get the list of plant IDs that the user has access to
     var userAccessiblePlantIds = ViewBag.UserAccessiblePlantIds as List<int> ?? new List<int>();
+
+    var selectedPlantFilter = ViewBag.CurrentPlantFilter as string;
+    var selectedPlantIds = new HashSet<int>();
+    if (!string.IsNullOrWhiteSpace(selectedPlantFilter))
+    {
+        foreach (var value in selectedPlantFilter.Split(','))
+        {
+            if (int.TryParse(value, out int plantId))
+            {
+                selectedPlantIds.Add(plantId);
+            }
+        }
+    }
 }
 
 <br></br>
@@ -37,24 +50,24 @@
 
         <div class="mt-3">
             <div class="d-flex flex-wrap gap-2">
-                <a href="@Url.Action("Index", "CertificateOfFitness", new { plantFilter = "", searchString = ViewBag.CurrentSearch, sortOrder = ViewBag.CurrentSort })"
-                    class="btn @(ViewBag.CurrentPlantFilter == null ? "btn-primary" : "btn-outline-primary")">
+                <a href="javascript:void(0)" onclick="clearPlantFilters()"
+                    class="btn @(selectedPlantIds.Count == 0 ? "btn-primary" : "btn-outline-primary")">
                     <i class="bi bi-buildings"></i> All Plants
                 </a>
-                <a href="@Url.Action("Index", "CertificateOfFitness", new { plantFilter = "135", searchString = ViewBag.CurrentSearch, sortOrder = ViewBag.CurrentSort })"
-                    class="btn @(ViewBag.CurrentPlantFilter != null && ViewBag.CurrentPlantFilter.ToString() == "135" ? "btn-primary" : "btn-outline-primary")">
+                <a href="javascript:void(0)" onclick="togglePlantFilter('1,3,5')"
+                    class="btn @(selectedPlantIds.Contains(1) && selectedPlantIds.Contains(3) && selectedPlantIds.Contains(5) ? "btn-primary" : "btn-outline-primary")">
                     <i class="bi bi-buildings"></i> P1, P3, P5
                 </a>
-                <a href="@Url.Action("Index", "CertificateOfFitness", new { plantFilter = "21", searchString = ViewBag.CurrentSearch, sortOrder = ViewBag.CurrentSort })"
-                    class="btn @(ViewBag.CurrentPlantFilter != null && ViewBag.CurrentPlantFilter.ToString() == "21" ? "btn-primary" : "btn-outline-primary")">
+                <a href="javascript:void(0)" onclick="togglePlantFilter('21')"
+                    class="btn @(selectedPlantIds.Contains(21) ? "btn-primary" : "btn-outline-primary")">
                     <i class="bi bi-buildings"></i> P21
                 </a>
-                <a href="@Url.Action("Index", "CertificateOfFitness", new { plantFilter = "13,55", searchString = ViewBag.CurrentSearch, sortOrder = ViewBag.CurrentSort })"
-                    class="btn @(ViewBag.CurrentPlantFilter != null && ViewBag.CurrentPlantFilter.ToString() == "13,55" ? "btn-primary" : "btn-outline-primary")">
+                <a href="javascript:void(0)" onclick="togglePlantFilter('13,55')"
+                    class="btn @(selectedPlantIds.Contains(13) && selectedPlantIds.Contains(55) ? "btn-primary" : "btn-outline-primary")">
                     <i class="bi bi-buildings"></i> P13, P55
                 </a>
-                <a href="@Url.Action("Index", "CertificateOfFitness", new { plantFilter = "34", searchString = ViewBag.CurrentSearch, sortOrder = ViewBag.CurrentSort })"
-                    class="btn @(ViewBag.CurrentPlantFilter != null && ViewBag.CurrentPlantFilter.ToString() == "34" ? "btn-primary" : "btn-outline-primary")">
+                <a href="javascript:void(0)" onclick="togglePlantFilter('34')"
+                    class="btn @(selectedPlantIds.Contains(34) ? "btn-primary" : "btn-outline-primary")">
                     <i class="bi bi-buildings"></i> P34
                 </a>
             </div>
@@ -234,5 +247,58 @@
         $(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
+
+        function getSelectedPlantIds() {
+            var rawValue = $("input[name='plantFilter']").val();
+
+            if (!rawValue) {
+                return [];
+            }
+
+            return rawValue
+                .split(',')
+                .map(function (value) { return parseInt(value, 10); })
+                .filter(function (value) { return !isNaN(value); });
+        }
+
+        function setSelectedPlantIds(plantIds) {
+            var normalizedIds = plantIds
+                .filter(function (value, index, self) { return self.indexOf(value) === index; })
+                .sort(function (a, b) { return a - b; });
+
+            $("input[name='plantFilter']").val(normalizedIds.join(','));
+            $(".card-body form").first().submit();
+        }
+
+        function togglePlantFilter(filterValue) {
+            var plantIds = getSelectedPlantIds();
+            var filterIds = filterValue
+                .toString()
+                .split(',')
+                .map(function (value) { return parseInt(value, 10); })
+                .filter(function (value) { return !isNaN(value); });
+
+            var isFullySelected = filterIds.length > 0 && filterIds.every(function (plantId) {
+                return plantIds.indexOf(plantId) !== -1;
+            });
+
+            if (isFullySelected) {
+                plantIds = plantIds.filter(function (plantId) {
+                    return filterIds.indexOf(plantId) === -1;
+                });
+            } else {
+                filterIds.forEach(function (plantId) {
+                    if (plantIds.indexOf(plantId) === -1) {
+                        plantIds.push(plantId);
+                    }
+                });
+            }
+
+            setSelectedPlantIds(plantIds);
+        }
+
+        function clearPlantFilters() {
+            setSelectedPlantIds([]);
+        }
     </script>
 }

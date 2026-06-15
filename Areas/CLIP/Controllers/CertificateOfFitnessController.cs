@@ -100,31 +100,44 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
             // Apply plant filter
             if (!string.IsNullOrEmpty(plantFilter))
             {
-                switch (plantFilter)
+                var plantIds = plantFilter
+                    .Split(',')
+                    .Select(p => int.TryParse(p, out int id) ? id : -1)
+                    .Where(id => id != -1)
+                    .ToList();
+
+                if (plantIds.Any())
                 {
-                    case "135":
-                        certificates = certificates.Where(c => c.Plant.PlantName == "Plant 1" || 
-                                                             c.Plant.PlantName == "Plant 3" || 
-                                                             c.Plant.PlantName == "Plant 5");
-                        break;
-                    case "21":
-                        certificates = certificates.Where(c => c.Plant.PlantName == "Plant 21");
-                        break;
-                    case "13,55":
-                        certificates = certificates.Where(c => c.Plant.PlantName == "Plant 13" || 
-                                                             c.Plant.PlantName == "Plant 55");
-                        break;
-                    case "34":
-                        certificates = certificates.Where(c => c.Plant.PlantName == "Plant 34");
-                        break;
-                    default:
-                        // Try to parse as normal plant ID if it doesn't match any of the special filters
-                        int plantId;
-                        if (int.TryParse(plantFilter, out plantId))
-                        {
-                            certificates = certificates.Where(c => c.PlantId == plantId);
-                        }
-                        break;
+                    certificates = certificates.Where(c => plantIds.Contains(c.PlantId));
+                }
+                else
+                {
+                    switch (plantFilter)
+                    {
+                        case "135":
+                            certificates = certificates.Where(c => c.Plant.PlantName == "Plant 1" || 
+                                                                 c.Plant.PlantName == "Plant 3" || 
+                                                                 c.Plant.PlantName == "Plant 5");
+                            break;
+                        case "21":
+                            certificates = certificates.Where(c => c.Plant.PlantName == "Plant 21");
+                            break;
+                        case "13,55":
+                            certificates = certificates.Where(c => c.Plant.PlantName == "Plant 13" || 
+                                                                 c.Plant.PlantName == "Plant 55");
+                            break;
+                        case "34":
+                            certificates = certificates.Where(c => c.Plant.PlantName == "Plant 34");
+                            break;
+                        default:
+                            // Try to parse as normal plant ID if it doesn't match any of the special filters
+                            int plantId;
+                            if (int.TryParse(plantFilter, out plantId))
+                            {
+                                certificates = certificates.Where(c => c.PlantId == plantId);
+                            }
+                            break;
+                    }
                 }
             }
             
