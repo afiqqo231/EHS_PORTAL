@@ -59,6 +59,7 @@ namespace FETS.Pages.MapLayout
                         if (reader.Read())
                         {
                             lblPlantName.Text = reader["PlantName"].ToString();
+                            lblPlantNameHeader.Text = reader["PlantName"].ToString();
                             lblLevelName.Text = reader["LevelName"].ToString();
                             if (!reader.IsDBNull(reader.GetOrdinal("ImagePath")))
                             {
@@ -126,13 +127,6 @@ namespace FETS.Pages.MapLayout
         protected void btnBack_Click(object sender, EventArgs e)
         {
                             Response.Redirect("~/Areas/FETS/Pages/MapLayout/MapLayout.aspx");
-        }
-
-        protected void btnLogout_Click(object sender, EventArgs e)
-        {
-            FormsAuthentication.SignOut();
-            Session.Clear();
-            Response.Redirect("~/Areas/FETS/Pages/Login/Login.aspx");
         }
     }
 } 

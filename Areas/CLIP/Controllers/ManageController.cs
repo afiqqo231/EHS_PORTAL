@@ -573,7 +573,8 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
                 TwoFactorEnabled = user.TwoFactorEnabled,
                 LockoutEnabled = user.LockoutEnabled,
                 AccessFailedCount = user.AccessFailedCount,
-                Dosh_CEP = user.Dosh_CEP
+                Dosh_CEP = user.Dosh_CEP,
+                IsActive = user.IsActive
             };
 
             return View(model);
@@ -864,6 +865,105 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
                 TempData["ErrorMessage"] = "Failed to delete user.";
             }
 
+            return RedirectToAction("Users");
+        }
+
+        // POST: Manage/DeactivateUser/userId
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ClipAuthorize(Roles = "Admin")]
+        public async Task<ActionResult> DeactivateUser(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var user = await UserManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return HttpNotFound();
+            }
+
+            if (user.Id == User.Identity.GetUserId())
+            {
+                TempData["ErrorMessage"] = "You cannot deactivate your own account.";
+                return RedirectToAction("Users");
+            }
+
+            user.IsActive = false;
+            var result = await UserManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to deactivate user.";
+                return RedirectToAction("Users");
+            }
+
+            // Set all competencies to Inactive
+            var competencies = _db.UserCompetencies.Where(uc => uc.UserId == id).ToList();
+            foreach (var uc in competencies)
+            {
+                uc.Status = "Inactive";
+            }
+            await _db.SaveChangesAsync();
+
+            var logger = new ActivityLogger(_db, HttpContext);
+            logger.LogActivity(
+                action: "UPDATE",
+                description: "Admin deactivated user account",
+                entityName: "User",
+                entityId: user.Id
+            );
+
+            TempData["SuccessMessage"] = $"User '{user.UserName}' has been deactivated.";
+            return RedirectToAction("Users");
+        }
+
+        // POST: Manage/ReactivateUser/userId
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ClipAuthorize(Roles = "Admin")]
+        public async Task<ActionResult> ReactivateUser(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var user = await UserManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return HttpNotFound();
+            }
+
+            user.IsActive = true;
+            var result = await UserManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to reactivate user.";
+                return RedirectToAction("Users");
+            }
+
+            // Recalculate status for all competencies
+            var competencies = _db.UserCompetencies
+                .Include(uc => uc.CompetencyModule)
+                .Where(uc => uc.UserId == id)
+                .ToList();
+            foreach (var uc in competencies)
+            {
+                uc.CalculateStatus();
+            }
+            await _db.SaveChangesAsync();
+
+            var logger = new ActivityLogger(_db, HttpContext);
+            logger.LogActivity(
+                action: "UPDATE",
+                description: "Admin reactivated user account",
+                entityName: "User",
+                entityId: user.Id
+            );
+
+            TempData["SuccessMessage"] = $"User '{user.UserName}' has been reactivated.";
             return RedirectToAction("Users");
         }
 

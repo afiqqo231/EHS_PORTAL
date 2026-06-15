@@ -89,6 +89,12 @@ namespace EHS_PORTAL.Areas.CLIP.Controllers
                 return View(model);
             }
 
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError("", "This account has been deactivated. Contact your administrator.");
+                return View(model);
+            }
+
             // Now sign in with the username instead of email
             var result = await SignInManager.PasswordSignInAsync(user.UserName, model.Password, false, shouldLockout: false);
             switch (result)

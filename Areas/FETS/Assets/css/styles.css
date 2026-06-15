@@ -836,6 +836,18 @@ label {
     border: 1px solid #dee2e6;
 }
 
+/* Map View (ViewMap.aspx) — standalone popup page */
+.map-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.fe-count {
+    font-size: 0.9rem;
+    color: #555;
+}
+
 /* Map Viewer Styles */
 .map-viewer-section {
     background-color: white;

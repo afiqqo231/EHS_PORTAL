@@ -24,6 +24,7 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
             string typeIdStr = context.Request.Form["typeId"];
             string expiry = context.Request.Form["expiry"];
             string statusIdStr = context.Request.Form["statusId"];
+            string remarks = context.Request.Form["remarks"];
 
             if (!int.TryParse(feIdStr, out int feId) || !int.TryParse(typeIdStr, out int typeId) || !int.TryParse(statusIdStr, out int statusId) || string.IsNullOrWhiteSpace(serial) || string.IsNullOrWhiteSpace(location))
             {
@@ -44,7 +45,7 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
                 using (SqlConnection conn = new SqlConnection(connStr))
                 {
                     conn.Open();
-                    string sql = @"UPDATE FETS.FireExtinguishers SET SerialNumber = @Serial, Location = @Location, TypeID = @TypeID, DateExpired = @Expiry, StatusID = @StatusID WHERE FEID = @FEID";
+                    string sql = @"UPDATE FETS.FireExtinguishers SET SerialNumber = @Serial, Location = @Location, TypeID = @TypeID, DateExpired = @Expiry, StatusID = @StatusID, Remarks = @Remarks WHERE FEID = @FEID";
 
                     using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
@@ -54,6 +55,7 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
                         cmd.Parameters.AddWithValue("@Expiry",   (object)expiryDate ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@StatusID", statusId);
                         cmd.Parameters.AddWithValue("@FEID",     feId);
+                        cmd.Parameters.AddWithValue("@Remarks",  remarks);
 
                         int rows = cmd.ExecuteNonQuery();
                         if (rows == 0)

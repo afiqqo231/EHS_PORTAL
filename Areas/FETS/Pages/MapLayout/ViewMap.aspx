@@ -4,8 +4,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>View Map - FETS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="<%= ResolveUrl("~/Areas/FETS/Assets/css/styles.css") %>" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
     <style>
         .dashboard-container {
             min-height: 100vh;
@@ -13,7 +15,7 @@
         }
 
         .dashboard-header {
-            background: #2c3e50;
+            background-color: #007bff;
             padding: 1rem 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
@@ -24,9 +26,9 @@
 
         .dashboard-header h2 {
             margin: 0;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 500;
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 600;
         }
 
         .user-info {
@@ -36,17 +38,22 @@
             color: white;
         }
 
-        .btn-logout {
+        .user-info label {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .btn-tab {
             padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            font-weight: 500;
             color: white;
+            width: 120px;
             text-decoration: none;
             transition: all 0.2s ease;
         }
 
-        .btn-logout:hover {
+        .btn-tab:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
             color: white;
@@ -64,6 +71,8 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             background: #f8f8f8;
+            padding: 0;
+            text-align: left;
         }
 
         .map-section {
@@ -92,14 +101,194 @@
         /* map-wrapper sizes itself to the image naturally */
         .map-wrapper {
             position: relative;
-            display: inline-block;
-            width: 100%;
+            display: block;
+            user-select: none;
+        }
+
+        .map-magnifier-glass {
+            position: absolute;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: none;
+            width: 100px;
+            height: 100px;
+        }
+
+        .map-magnifier-glass::before,
+        .map-magnifier-glass::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+        }
+
+        /* horizontal arm */
+        .map-magnifier-glass::before {
+            top: 50%;
+            left: 15%;
+            width: 70%;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        /* vertical arm */
+        .map-magnifier-glass::after {
+            left: 50%;
+            top: 15%;
+            height: 70%;
+            width: 1px;
+            transform: translateX(-50%);
         }
 
         .map-image {
             display: block;
-            max-width: 100%;
+            width: 100%;
             height: auto;
+        }
+
+        .map-context-menu {
+            position: fixed;
+            display: none;
+            background: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        .map-context-menu.visible {
+            display: block;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .pin-status-toggle {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 20px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .pin-status-toggle input[type="radio"]:checked + label{
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
+        .pin-status-toggle input[type="radio"] {
+            display: none;
+        }
+
+        .pin-status-toggle label{
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #666;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .pin-status-toggle::before {
+            display: none;
+        }
+
+        .pin-status-toggle:has(#allStatus:checked)::before{
+            left: 0%;
+        }
+        .pin-status-toggle:has(#pinnedStatus:checked)::before{
+            left: 33%;
+        }
+        .pin-status-toggle:has(#unpinnedStatus:checked)::before{
+            left: 66%;
+        }
+
+        #feModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #feModal h3 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        #feModal label {
+            display: block;
+        }
+
+        #feModal select {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            height: 30px;
+            box-sizing: border-box;
+        }
+
+        #feModal select:focus {
+            border-color: #ddd;
+            outline: none;
+            box-shadow: none;
+        }
+
+        #feModal button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        #feModal input[type="search"] {
+            width: 100%;
+            padding: 6px 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #feModal > div {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            width: 600px;
+            box-sizing: border-box;
+        }
+
+        #feModal .choices {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #feModal .choices__inner {
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        #feModal .row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #feModal .row button {
+            width: 100px;
+            flex: none;
         }
 
         .last-updated {
@@ -111,37 +300,46 @@
         }
 
 
+
         .marker {
             position: absolute;
-            width: 20px;
-            height: 20px;
-            transform: translate(-50%, -100%);
-            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            transform: translate(-50%, -50%);
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+
+        body.dragging-marker * {
+            cursor: grabbing !important;
         }
 
         .marker-icon {
-            width: 20px;
-            height: 20px;
-            background-color: #e74c3c;
-            border: 2px solid #c0392b;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: grab;
         }
 
         .marker-info {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
+            transform: translate(-50%, calc(-100% - 8px));
             background: white;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             padding: 10px;
             width: 200px;
             display: none;
-            z-index: 20;
+            z-index: 9999;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            text-align: left;
+            pointer-events: none;
         }
 
         .marker-info:after {
@@ -155,23 +353,20 @@
             border-color: white transparent transparent transparent;
         }
 
-        .marker.active .marker-info {
-            display: block;
+        .marker.active {
+            z-index: 100;
         }
 
-        .search-container {
-            margin-bottom: 0.75rem;
-            max-width: 400px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 8px 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            font-size: 14px;
-            box-sizing: border-box;
+        /* Small dot shown inside the magnifier glass when it hovers over a marker */
+        .ghost-marker-pin {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
         }
 
         .hidden-grid {
@@ -222,36 +417,14 @@
     <form id="form1" runat="server">
         <div class="dashboard-container">
             <header class="dashboard-header">
-                <h2>Fire Extinguisher Tracking System</h2>
+                <h2>Map Layout for: <asp:Label ID="lblPlantNameHeader" runat="server"></asp:Label></h2>
                 <div class="user-info">
-                    <asp:Label ID="lblUsername" runat="server"></asp:Label>
-                    <asp:LinkButton ID="btnBack" runat="server" OnClick="btnBack_Click" CssClass="btn-logout">Back to Map Layout</asp:LinkButton>
-                    <asp:LinkButton ID="btnLogout" runat="server" OnClick="btnLogout_Click" CssClass="btn-logout">Logout</asp:LinkButton>
+                    <label>User: <asp:Label ID="lblUsername" runat="server"></asp:Label></label>
+                    <a href="javascript:window.close()" class="btn btn-tab btn-warning">Close Tab</a>
                 </div>
             </header>
 
             <div class="content-container">
-                
-                <% if (IsAdmin) { %>
-                <div id="pinToolbar" class="pin-toolbar">
-                    <strong>Pin Mode:</strong>
-                    <button type="button" id="btnTogglePinMode" class="btn-pin-toggle"
-                            onclick="togglePinMode()">
-                        Enable Pin Placement
-                    </button>
-                    <span id="pinModeControls" style="display:none;">
-                        <label for="ddlSelectFE">Select FE:</label>
-                        <select id="ddlSelectFE" class="pin-select">
-                            <option value="">-- Select Fire Extinguisher --</option>
-                        </select>
-                        <span id="pinStatus" class="pin-status"></span>
-                    </span>
-                </div>
-                <% } %>
-
-                <div class="search-container">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search by serial number or location..." />
-                </div>
 
                 <div class="map-container">
                     <div class="map-section">
@@ -260,11 +433,11 @@
                                 <asp:Label ID="lblPlantName" runat="server"></asp:Label> -
                                 <asp:Label ID="lblLevelName" runat="server"></asp:Label>
                             </h3>
-                            <div style="display:flex; align-items:center; gap:1rem;">
-                                <span style="font-size:0.9rem; color:#555;">
+                            <div class="map-header-meta">
+                                <span class="fe-count">
                                     FE Count: <asp:Label ID="lblFECount" runat="server">0</asp:Label>
                                 </span>
-                                <div class="last-updated" style="position:static;">
+                                <div class="last-updated">
                                     Last Updated: <asp:Label ID="lblLastUpdated" runat="server"></asp:Label>
                                 </div>
                             </div>
@@ -272,6 +445,10 @@
                         <div class="map-wrapper">
                             <asp:Image ID="imgMap" runat="server" CssClass="map-image" ClientIDMode="Static"/>
                             <div id="markersContainer"></div>
+                            <div id="feList" class="map-context-menu">
+                                <button id="modalBtn" type="button">Map Fire Extinguisher</button>
+                                <button id="removeBtn" type="button" style="display:none;">Remove Pin</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -294,26 +471,68 @@
                 </div>
             </div>
         </div>
+
+        <div id="feModal" style="display:none;">
+            <div>  <!-- inner white card -->
+                <h3>Map Fire Extinguisher</h3>
+                <div class="filter-row">
+                    <label for="feSelect">Select Fire Extinguisher:</label>
+                    <div class="pin-status-toggle">
+
+                        <input type="radio" id="allStatus" name="radio" checked/>
+                        <label for="allStatus" class="pin-status">All</label>
+
+                        <input type="radio" id="pinnedStatus" name="radio"/>
+                        <label for="pinnedStatus" class="pin-status">Pinned</label>
+
+                        <input type="radio" id="unpinnedStatus" name="radio"/>
+                        <label for="unpinnedStatus" class="pin-status">Unpinned</label>
+
+                    </div>
+                </div>
+                <select id="feSelect">
+                    <option value="">-- Select Fire Extinguisher --</option>
+                </select>
+                <div class="row">
+                    <button class="btn btn-secondary" id="btnClose" type="button">Close</button>
+                    <button class="btn btn-primary" id="btnSave" type="button">Save Pins</button>
+                </div>
+            </div>
+        </div>
     </form>
 
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const mapWrapper  = document.querySelector(".map-wrapper");
             const mapImage    = document.getElementById("imgMap");
-            const searchInput = document.getElementById("searchInput");
-            let markers = [];
+            window._feMarkers = [];
             let pinModeActive = false;
+            var _drag = null;
+            var _suppressNextClick = false;
+
+            mapWrapper.addEventListener("dragstart", function(e) { e.preventDefault(); });
+            mapImage.draggable = false;
+
+            const MARKER_COLORS = {
+                active:   { bg: "#27ae60", border: "#1e8449" },
+                inactive: { bg: "#e74c3c", border: "#c0392b" },
+                service: { bg: "#f39c12", border: "#d68910" }
+            };
 
             // ── Render pins from hidden GridView ──────────────────────────────
             // Pins use percentage (0.0–1.0) positioned on the wrapper.
             // wrapper is relative, markers are absolute inside it.
             // pinX=0.5 means 50% from left edge of image.
+            window._allFeOptions = [];
+            var choices = null;
+
             function loadExtinguisherData() {
                 const gridView = document.getElementById("<%= gvFireExtinguishers.ClientID %>");
                 if (!gridView) return;
 
-                const rows     = gridView.getElementsByTagName("tr");
-                const feSelect = document.getElementById("ddlSelectFE");
+                const glass = document.querySelector(".map-magnifier-glass");
+                const rows  = gridView.getElementsByTagName("tr");
 
                 for (let i = 1; i < rows.length; i++) {
                     const cells = rows[i].getElementsByTagName("td");
@@ -332,28 +551,36 @@
 
                     if (feData.pinX !== null && !isNaN(feData.pinX) &&
                         feData.pinY !== null && !isNaN(feData.pinY)) {
-                        createMarker(feData);
+                        createMarker(feData, glass);
                     }
 
-                    if (feSelect) {
-                        const opt = document.createElement("option");
-                        opt.value       = feData.id;
-                        opt.textContent = feData.serial + " — " + feData.location;
-                        feSelect.appendChild(opt);
-                    }
+                    const pinned = feData.pinX !== null && feData.pinY !== null;
+                    window._allFeOptions.push({
+                        value:  feData.id,
+                        label:  feData.serial + " - " + feData.location + (pinned ? " (Pinned)" : " (Unpinned)"),
+                        pinned: pinned
+                    });
                 }
+
+                applyFilters();
             }
 
             // ── Create marker at percentage position ──────────────────────────
-            function createMarker(feData) {
+            function createMarker(feData, glass) {
                 const div = document.createElement("div");
                 div.className    = "marker";
                 div.dataset.feId = feData.id;
                 div.style.left   = (feData.pinX * 100) + "%";
                 div.style.top    = (feData.pinY * 100) + "%";
 
+                var isActive = feData.status.toLowerCase().includes("active");
+                var isService = feData.status.toLowerCase().includes("servicing");
+                var colors   = isActive ? MARKER_COLORS.active : (isService ? MARKER_COLORS.service : MARKER_COLORS.inactive);
+
                 const icon = document.createElement("div");
                 icon.className = "marker-icon";
+                icon.style.backgroundColor = colors.bg;
+                icon.style.border = "1.5px solid " + colors.border;
 
                 const info = document.createElement("div");
                 info.className = "marker-info";
@@ -362,123 +589,308 @@
                     "Type: "     + feData.type     + "<br>" +
                     "Location: " + feData.location + "<br>" +
                     "Expires: "  + feData.expiry   + "<br>" +
-                    "Status: <span style='color:" +
-                        (feData.status.toLowerCase().includes("active") ? "green" : "red") +
-                    "'>" + feData.status + "</span>";
+                    "Status: <span class='badge " + (isActive ? "text-bg-success" : (isService ? "text-bg-warning" : "text-bg-danger")) + "'>" +
+                    feData.status + "</span>";
 
-                div.appendChild(icon);
-                div.appendChild(info);
-                mapWrapper.appendChild(div);
+                div.addEventListener("dragstart", function(e) { e.preventDefault(); });
 
-                div.addEventListener("click", function (e) {
-                    if (pinModeActive) return;
+                div.addEventListener("mousedown", function(e) {
+                    if (e.button !== 0) return;
+                    e.preventDefault();
                     e.stopPropagation();
-                    document.querySelectorAll(".marker.active")
-                            .forEach(function (m) { if (m !== div) m.classList.remove("active"); });
-                    div.classList.toggle("active");
+                    var rect = mapImage.getBoundingClientRect();
+                    var cursorX = (e.clientX - rect.left) / rect.width;
+                    var cursorY = (e.clientY - rect.top)  / rect.height;
+                    var markerX = parseFloat(div.style.left) / 100;
+                    var markerY = parseFloat(div.style.top)  / 100;
+                    info.style.display = "none";
+                    div.classList.remove("active");
+                    _drag = {
+                        markerEl: div,
+                        feId: feData.id,
+                        imgEl: mapImage,
+                        hasMoved: false,
+                        offsetX: markerX - cursorX,
+                        offsetY: markerY - cursorY,
+                        oldX: markerX,
+                        oldY: markerY
+                    };
+                    document.body.classList.add('dragging-marker');
                 });
 
-                markers.push({ element: div, data: feData });
+                function positionInfo() {
+                    var r = icon.getBoundingClientRect();
+                    info.style.left = (r.left + r.width / 2) + "px";
+                    info.style.top  = r.top + "px";
+                }
+
+                window.addEventListener("scroll", function() {
+                    if (info.style.display === "block") {
+                        positionInfo();   // reanchor to marker's new viewport position
+                    }
+                }, true);
+
+                div.appendChild(icon);
+                mapWrapper.appendChild(div);
+                document.body.appendChild(info);
+
+                div.addEventListener("click", function (e) {
+                    if (_suppressNextClick) { _suppressNextClick = false; return; }
+                    if (pinModeActive) return;
+                    e.stopPropagation();
+                    document.querySelectorAll(".marker.active").forEach(function (m) {
+                        if (m !== div) {
+                            m.classList.remove("active");
+                            var other = window._feMarkers.find(function(x) { return x.element === m; });
+                            if (other && other.infoEl) other.infoEl.style.display = "none";
+                        }
+                    });
+                    var isNowActive = div.classList.toggle("active");
+                    if (isNowActive) {
+                        positionInfo();
+                        info.style.display = "block";
+                    } else {
+                        info.style.display = "none";
+                    }
+                });
+
+                div.addEventListener("contextmenu", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    contextTarget = "marker";
+                    contextMarkerId = feData.id;
+
+                    document.getElementById("modalBtn").style.display = "none";
+                    document.getElementById("removeBtn").style.display = "block";
+
+                    const menu = document.querySelector(".map-context-menu");
+                    menu.style.left = e.clientX + "px";
+                    menu.style.top  = e.clientY + "px";
+                    menu.classList.add("visible");
+                });
+
+
+                // Glass is already in DOM — magnify() runs before DOMContentLoaded callbacks.
+                var ghost = null;
+                if (glass) {
+                    ghost = document.createElement("div");
+                    ghost.className = "ghost-marker-pin";
+                    ghost.style.backgroundColor = colors.bg;
+                    ghost.style.border = "1.5px solid " + colors.border;
+                    glass.appendChild(ghost);
+                }
+
+                window._feMarkers.push({ element: div, data: feData, ghost: ghost, infoEl: info });
             }
 
             function removeMarker(feId) {
-                const m = markers.find(function (m) { return m.data.id === feId; });
-                if (m) { m.element.remove(); markers = markers.filter(function (x) { return x.data.id !== feId; }); }
+                const m = window._feMarkers.find(function (m) { return m.data.id === feId; });
+                if (m) {
+                    m.element.remove();
+                    if (m.ghost && m.ghost.parentElement) m.ghost.remove();
+                    if (m.infoEl && m.infoEl.parentElement) m.infoEl.remove();
+                    window._feMarkers = window._feMarkers.filter(function (x) { return x.data.id !== feId; });
+                }
             }
 
-            // ── Pin mode ──────────────────────────────────────────────────────
-            window.togglePinMode = function () {
-                pinModeActive = !pinModeActive;
-                const btn      = document.getElementById("btnTogglePinMode");
-                const controls = document.getElementById("pinModeControls");
+            document.getElementById("removeBtn").addEventListener("click", function (e) {
+                    e.stopPropagation();
 
-                if (pinModeActive) {
-                    btn.textContent           = "✅ Pin Mode ON — click to disable";
-                    btn.style.backgroundColor = "#28a745";
-                    btn.style.color           = "white";
-                    controls.style.display    = "flex";
-                    controls.style.alignItems = "center";
-                    controls.style.gap        = "8px";
-                    mapWrapper.style.cursor   = "crosshair";
-                } else {
-                    btn.textContent           = "📍 Enable Pin Placement";
-                    btn.style.backgroundColor = "";
-                    btn.style.color           = "";
-                    controls.style.display    = "none";
-                    mapWrapper.style.cursor   = "default";
-                    document.getElementById("pinStatus").textContent = "";
+                    if (!contextMarkerId) return;
+
+                    const feId = contextMarkerId;
+                    document.querySelector(".map-context-menu").classList.remove("visible");
+
+                    const formData = new FormData();
+                    formData.append("feId", feId);
+
+                    fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/RemovePin.ashx") %>', {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(function (r) { if (r.ok) return r.text(); throw new Error("Server error " + r.status); })
+                    .then(function (text) {
+                        if (text === "ok") {
+                            // Remove marker from map
+                            removeMarker(feId);
+
+                            // Update _allFeOptions label from (Pinned) to (Unpinned)
+                            const entry = window._allFeOptions.find(function(o) { return o.value === feId; });
+                            if (entry) {
+                                entry.label  = entry.label.replace("(Pinned)", "(Unpinned)");
+                                entry.pinned = false;
+                            }
+                            applyFilters();
+
+                            contextMarkerId = null;
+                            alert("Pin removed successfully!");
+                        }
+                    })
+                    .catch(function (err) {
+                        alert("Error removing pin: " + err.message);
+                    });
+                });
+
+            function applyFilters() {
+                const filter = document.querySelector('input[name="radio"]:checked').id;
+
+                const filtered = window._allFeOptions.filter(function(opt) {
+                    if (filter === "pinnedStatus")   return opt.pinned;
+                    if (filter === "unpinnedStatus") return !opt.pinned;
+                    return true;
+                });
+
+                // Destroy existing Choices instance to avoid duplication
+                if (choices) choices.destroy();
+
+                // Rebuild underlying <select> with filtered options
+                const sel = document.getElementById("feSelect");
+                sel.innerHTML = '<option value="">-- Select Fire Extinguisher --</option>';
+                filtered.forEach(function(opt) {
+                    const o = document.createElement("option");
+                    o.value = opt.value;
+                    o.textContent = opt.label;
+                    sel.appendChild(o);
+                });
+
+                // Reinitialize Choices on clean <select>
+                choices = new Choices('#feSelect', {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search by serial or location...',
+                    itemSelectText: '',
+                    shouldSort: false
+                });
+            }
+
+            document.querySelectorAll('input[name="radio"]').forEach(function(radio) {
+                radio.addEventListener("change", applyFilters);
+            });
+
+            document.getElementById("modalBtn").addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.querySelector(".map-context-menu").classList.remove("visible");
+                document.getElementById("feModal").style.display = "flex";
+                console.log("modal display is now:", document.getElementById("feModal").style.display);
+
+            });
+
+            document.getElementById("btnClose").addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.getElementById("feModal").style.display = "none";
+                pendingX = null;
+                pendingY = null;
+            });
+
+            document.getElementById("btnSave").addEventListener("click", function (e) {
+                e.stopPropagation();
+                const feId = document.getElementById("feSelect").value;
+                if (!feId || pendingX === null || pendingY === null) {
+                    alert("Please select a fire extinguisher and click on the map to set its location.");
+                    return;
                 }
-            };
-
-            // Click on map → compute percentage position → save to DB
-            mapWrapper.addEventListener("click", function (e) {
-                if (!pinModeActive) return;
-
-                const feId = document.getElementById("ddlSelectFE") &&
-                             document.getElementById("ddlSelectFE").value;
-                if (!feId) { alert("Select a Fire Extinguisher first."); return; }
-
-                const rect = mapWrapper.getBoundingClientRect();
-                const pinX = (e.clientX - rect.left)  / rect.width;
-                const pinY = (e.clientY - rect.top)   / rect.height;
-
-                if (pinX < 0 || pinX > 1 || pinY < 0 || pinY > 1) return;
-
-                const pinStatus = document.getElementById("pinStatus");
-                pinStatus.textContent = "Saving...";
-
                 const formData = new FormData();
                 formData.append("feId", feId);
-                formData.append("pinX", pinX.toFixed(6));
-                formData.append("pinY", pinY.toFixed(6));
+                formData.append("pinX", pendingX);
+                formData.append("pinY", pendingY);
 
                 fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/SavePin.ashx") %>', {
-                    method: "POST", body: formData
+                    method: "POST",
+                    body: formData
                 })
-                .then(function (r) { if (r.ok) return r.text(); throw new Error("Server error " + r.status); })
+                .then(function (r) { if (r.ok) return r.text(); else throw new Error("Network response was not ok"); })
                 .then(function (text) {
                     if (text === "ok") {
-                        pinStatus.textContent = "✅ Pin saved!";
+                        console.log("server responded with:", text);
+                        document.getElementById("feModal").style.display = "none";
                         removeMarker(feId);
                         const gridView = document.getElementById("<%= gvFireExtinguishers.ClientID %>");
                         const rows = gridView.getElementsByTagName("tr");
                         for (let i = 1; i < rows.length; i++) {
                             const cells = rows[i].getElementsByTagName("td");
-                            if (cells.length >= 9 && cells[0].textContent.trim() === feId) {
+                            if (cells[0].textContent.trim() === feId) {
                                 createMarker({
-                                    id: cells[0].textContent.trim(), serial: cells[1].textContent.trim(),
-                                    location: cells[2].textContent.trim(), type: cells[3].textContent.trim(),
-                                    expiry: cells[4].textContent.trim(), status: cells[5].textContent.trim(),
-                                    pinX: pinX, pinY: pinY
-                                });
+                                    id:       cells[0].textContent.trim(),
+                                    serial:   cells[1].textContent.trim(),
+                                    location: cells[2].textContent.trim(),
+                                    type:     cells[3].textContent.trim(),
+                                    expiry:   cells[4].textContent.trim(),
+                                    status:   cells[5].textContent.trim(),
+                                    pinX:     pendingX,
+                                    pinY:     pendingY
+                                }, document.querySelector(".map-magnifier-glass"));
                                 break;
                             }
                         }
-                        setTimeout(function () { pinStatus.textContent = ""; }, 2000);
+                        // Update _allFeOptions label from (Unpinned) to (Pinned)
+                        const entry = window._allFeOptions.find(function(o) { return o.value === feId; });
+                        if (entry) {
+                            entry.label  = entry.label.replace("(Unpinned)", "(Pinned)");
+                            entry.pinned = true;
+                        }
+                        applyFilters();
+                        pendingX = null;
+                        pendingY = null;
+                        alert("Pin saved successfully!");
                     }
                 })
-                .catch(function (err) { pinStatus.textContent = "❌ " + err.message; });
+                .catch(function (err) {
+                    console.error("Error saving pin:", err);
+                    alert("An error occurred while saving the pin. Please try again.");
+                });
+            })
+
+            document.addEventListener("mousemove", function(e) {
+                if (!_drag) return;
+                var rect = _drag.imgEl.getBoundingClientRect();
+                var cursorX = (e.clientX - rect.left) / rect.width;
+                var cursorY = (e.clientY - rect.top)  / rect.height;
+                var x = Math.max(0, Math.min(1, cursorX + _drag.offsetX));
+                var y = Math.max(0, Math.min(1, cursorY + _drag.offsetY));
+                _drag.markerEl.style.left = (x * 100) + '%';
+                _drag.markerEl.style.top  = (y * 100) + '%';
+                _drag.hasMoved = true;
             });
 
-            // ── Search ────────────────────────────────────────────────────────
-            if (searchInput) {
-                searchInput.addEventListener("input", function () {
-                    const term = this.value.toLowerCase();
-                    markers.forEach(function (m) {
-                        const match = !term ||
-                            m.data.serial.toLowerCase().includes(term) ||
-                            m.data.location.toLowerCase().includes(term) ||
-                            m.data.status.toLowerCase().includes(term);
-                        m.element.style.opacity = match ? "1" : "0.3";
-                        if (!match) m.element.classList.remove("active");
+            document.addEventListener("mouseup", function(e) {
+                if (!_drag) return;
+                var d = _drag;
+                _drag = null;
+                document.body.classList.remove('dragging-marker');
+
+                if (!d.hasMoved) return;
+
+                _suppressNextClick = true;
+
+                var x = parseFloat(d.markerEl.style.left) / 100;
+                var y = parseFloat(d.markerEl.style.top)  / 100;
+
+                var fd = new FormData();
+                fd.append("feId", d.feId);
+                fd.append("pinX", x);
+                fd.append("pinY", y);
+
+                var savedX = x, savedY = y;
+                fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/SavePin.ashx") %>', { method: "POST", body: fd })
+                    .then(function(r) { return r.text(); })
+                    .then(function(t) {
+                        if (t.trim() !== "ok") { console.error("SavePin failed", t); return; }
+                        var m = window._feMarkers.find(function(m) { return m.data.id === d.feId; });
+                        if (m) { m.data.pinX = savedX; m.data.pinY = savedY; }
+                    })
+                    .catch(function(err) { 
+                        console.error("SavePin drag error", err);
+                        d.markerEl.style.left = (d.oldX * 100) + '%';
+                        d.markerEl.style.top  = (d.oldY * 100) + '%';
+                        alert("Error saving pin position. It has been reset to its original location.");
                     });
-                });
-            }
+            });
 
             document.addEventListener("click", function (e) {
+                _suppressNextClick = false;
                 if (!e.target.closest(".marker")) {
-                    document.querySelectorAll(".marker.active")
-                            .forEach(function (m) { m.classList.remove("active"); });
+                    document.querySelectorAll(".marker.active").forEach(function (m) { m.classList.remove("active"); });
+                    window._feMarkers.forEach(function (m) { if (m.infoEl) m.infoEl.style.display = "none"; });
                 }
             });
 
@@ -486,6 +898,160 @@
             if (mapImage.complete) loadExtinguisherData();
             else mapImage.onload = loadExtinguisherData;
         });
+        function getCursorPos(e, element) {
+            var a, x = 0, y = 0;
+            e = e || window.event;
+
+            a = element.getBoundingClientRect();
+
+            return {x: e.clientX - a.left, y: e.clientY - a.top};
+        
+        }
+
+        function magnify(imgID, zoom) {
+            var img, glass, w, h, bw;
+            img = document.getElementById(imgID);
+
+            glass = document.createElement("DIV");
+            glass.setAttribute("class", "map-magnifier-glass");
+
+            img.parentElement.insertBefore(glass, img);
+
+            glass.style.backgroundImage = "url('" + img.src + "')";
+            glass.style.backgroundRepeat = "no-repeat";
+            bw = 3;
+            w = glass.offsetWidth / 2;
+            h = glass.offsetHeight / 2;
+
+            function applyBackgroundSize() {
+                glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+            }
+            // img.width is 0 if image hasn't loaded yet — set now if ready, otherwise wait.
+            if (img.complete && img.naturalWidth > 0) {
+                applyBackgroundSize();
+            } else {
+                img.addEventListener("load", applyBackgroundSize);
+            }
+
+            glass.addEventListener("mousemove", moveMagnifier);
+            img.addEventListener("mousemove", moveMagnifier);
+
+            // Hide all ghost dots when cursor leaves the image/glass
+            glass.addEventListener("mouseleave", hideGhosts);
+            img.addEventListener("mouseleave", hideGhosts);
+
+            function hideGhosts() {
+                window._feMarkers.forEach(function (m) {
+                    if (m.ghost) m.ghost.style.display = "none";
+                    m.element.style.visibility = "visible";
+                });
+            }
+
+            // Hold Ctrl to show magnifier; release to hide.
+            var magnifierEnabled = false;
+            var lastMouseEvent   = null;
+            glass.style.display  = "none";
+
+            img.addEventListener("mousemove", function (e) { lastMouseEvent = e; });
+
+            document.addEventListener("keydown", function (e) {
+                if (e.key !== "Control" || magnifierEnabled) return;
+                magnifierEnabled = true;
+                glass.style.display = "";
+                if (lastMouseEvent) moveMagnifier(lastMouseEvent);
+            });
+
+            document.addEventListener("keyup", function (e) {
+                if (e.key !== "Control") return;
+                magnifierEnabled = false;
+                glass.style.display = "none";
+                hideGhosts();
+            });
+
+            function moveMagnifier(e) {
+                if (!magnifierEnabled) return;
+                e.preventDefault();
+
+                var pos = getCursorPos(e, img);
+                var x = pos.x;
+                var y = pos.y;
+
+                if (x > img.width - (w / zoom)) {x = img.width - (w/zoom);}
+                if (x < w / zoom) { x = w /zoom;}
+                if (y > img.height - (h / zoom)) {y = img.height - (h/zoom);}
+                if (y < h / zoom) { y = h / zoom;}
+
+                glass.style.left = (x - w) + "px";
+                glass.style.top = (y - h) + "px";
+
+                glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+
+                // Map each marker's pixel position into glass-space coords and hide/show it.
+                // Marker (dx,dy) image-pixels from cursor center → (dx*zoom, dy*zoom) from glass center.
+                // hideRadiusSq  — physical glass boundary: hide marker as soon as glass overlaps it
+                // ghostRadiusSq — glass interior: show ghost dot only when it won't clip the circular border
+                var hideRadiusSq  = w * w * zoom * zoom;
+                var ghostRadiusSq = (w - 4) * (w - 4);
+                window._feMarkers.forEach(function (m) {
+                        var markerPxX = (parseFloat(m.element.style.left) / 100) * img.width;
+                        var markerPxY = (parseFloat(m.element.style.top)  / 100) * img.height;
+
+                        var relX = (markerPxX - x) * zoom + w;
+                        var relY = (markerPxY - y) * zoom + h;
+
+                        var dx = relX - w;
+                        var dy = relY - h;
+                        var distSq = dx * dx + dy * dy;
+
+                        m.element.style.visibility = distSq < hideRadiusSq ? "hidden" : "visible";
+
+                        if (m.ghost) {
+                            var inGlass = distSq < ghostRadiusSq;
+                            m.ghost.style.display = inGlass ? "block" : "none";
+                            if (inGlass) {
+                                m.ghost.style.left = relX + "px";
+                                m.ghost.style.top  = relY + "px";
+                            }
+                        }
+                });
+            }
+
+        }
+
+        magnify("imgMap", 2);
+
+        
+        let pendingX = null;
+        let pendingY = null;
+        let contextTarget = null;
+        let contextMarkerId = null;
+        const img = document.getElementById("imgMap");
+
+        document.addEventListener("contextmenu", function (e) {
+            if (!e.target.closest(".map-wrapper")) return;
+            if (e.target.closest(".marker")) return; // let marker handle it
+
+            e.preventDefault();
+            contextTarget = "map";
+            contextMarkerId = null;
+
+            document.getElementById("modalBtn").style.display = "block";
+            document.getElementById("removeBtn").style.display = "none";
+
+            const menu = document.querySelector(".map-context-menu");
+            menu.style.left = e.clientX + "px";
+            menu.style.top  = e.clientY + "px";
+            const pos = getCursorPos(e, img);
+            pendingX = pos.x / img.width;
+            pendingY = pos.y / img.height;
+            menu.classList.add("visible");
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.closest(".map-context-menu")) return;
+            document.querySelector(".map-context-menu").classList.remove("visible");
+        })
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

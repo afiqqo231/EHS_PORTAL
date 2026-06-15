@@ -18,8 +18,8 @@ namespace FETS.Pages.MapLayout
         private int? UserPlantID { get; set; }
         private bool IsAdministrator { get; set; }
         
-        protected string TypesJson {get; private set;}
-        protected string StatusesJson {get; private set;}
+        protected string TypesJson { get; private set; } = "[]";
+        protected string StatusesJson { get; private set; } = "[]";
 
         protected void Page_Load(object sender, EventArgs e)
         {

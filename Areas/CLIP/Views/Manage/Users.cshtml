@@ -132,13 +132,14 @@
                                         <th class="text-center">DOSH CEP</th>
                                         <th class="text-center">ATOM CEP</th>
                                         <th class="text-center">Phone Number</th>
+                                        <th class="text-center">Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var user in Model)
                                     {
-                                        <tr class="user-row" data-user-id="@user.Id" data-user-name="@user.UserName" data-user-email="@user.Email">
+                                        <tr class="user-row @(user.IsActive ? "" : "user-inactive")" data-user-id="@user.Id" data-user-name="@user.UserName" data-user-email="@user.Email">
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-circle me-2">
@@ -158,6 +159,16 @@
                                             <td class="text-center"><span class="badge bg-primary rounded-pill">@(user.Atom_CEP ?? 0)</span></td>
                                             <td class="text-center">@(string.IsNullOrEmpty(user.PhoneNumber) ? "Not set" : user.PhoneNumber)</td>
                                             <td class="text-center">
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="btn-group">
                                                     <a href="@Url.Action("UserDetails", new { id = user.Id })" class="btn btn-sm btn-info" title="View Details" data-bs-toggle="tooltip" data-bs-placement="top">
                                                         <i class="fas fa-info-circle"></i>
@@ -168,9 +179,29 @@
                                                     <a href="@Url.Action("ResetUserPassword", new { id = user.Id })" class="btn btn-sm btn-secondary" title="Reset Password" data-bs-toggle="tooltip" data-bs-placement="top">
                                                         <i class="fas fa-key"></i>
                                                     </a>
-                                                    <a href="@Url.Action("DeleteUser", new { id = user.Id })" class="btn btn-sm btn-danger" title="Delete User" data-bs-toggle="tooltip" data-bs-placement="top">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <form method="post" action="@Url.Action("DeactivateUser", "Manage", new { area = "CLIP" })" style="display:inline;" onsubmit="return confirm('Deactivate user @user.UserName? Their competencies will be set to Inactive.');">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@user.Id" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Deactivate User" data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                <i class="fas fa-user-slash"></i>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <form method="post" action="@Url.Action("ReactivateUser", "Manage", new { area = "CLIP" })" style="display:inline;" onsubmit="return confirm('Reactivate user @user.UserName?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@user.Id" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Reactivate User" data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                <i class="fas fa-user-check"></i>
+                                                            </button>
+                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger delete-user-btn" data-user-id="@user.Id" data-user-name="@user.UserName" title="Delete User" data-bs-toggle="tooltip" data-bs-placement="top">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    }
                                                 </div>
                                             </td>
                                         </tr>
@@ -195,12 +226,16 @@
                             @foreach (var user in Model)
                             {
                                 <div class="col-12 col-md-6 col-lg-4 col-xl-3 user-card-col" data-user-id="@user.Id" data-user-name="@user.UserName" data-user-email="@user.Email">
-                                    <div class="card h-100 user-card">
-                                        <div class="card-header text-center bg-light py-3 position-relative">
+                                    <div class="card h-100 user-card @(user.IsActive ? "" : "border border-secondary")">
+                                        <div class="card-header text-center @(user.IsActive ? "bg-light" : "bg-secondary bg-opacity-10") py-3 position-relative">
                                             <div class="avatar-circle-lg mx-auto mb-2">
                                                 @(string.IsNullOrEmpty(user.UserName) ? "?" : user.UserName.Substring(0, 1).ToUpper())
                                             </div>
                                             <h5 class="card-title mb-0 text-truncate">@user.UserName</h5>
+                                            @if (!user.IsActive)
+                                            {
+                                                <span class="badge bg-secondary mt-1">Inactive</span>
+                                            }
                                             <span class="position-absolute top-0 end-0 p-2">
                                                 <div class="dropdown">
                                                     <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -223,11 +258,35 @@
                                                             </a>
                                                         </li>
                                                         <li><hr class="dropdown-divider"></li>
-                                                        <li>
-                                                            <a class="dropdown-item text-danger" href="@Url.Action("DeleteUser", new { id = user.Id })">
-                                                                <i class="fas fa-trash me-2"></i>Delete User
-                                                            </a>
-                                                        </li>
+                                                        @if (user.IsActive)
+                                                        {
+                                                            <li>
+                                                                <form method="post" action="@Url.Action("DeactivateUser", "Manage", new { area = "CLIP" })" onsubmit="return confirm('Deactivate user @user.UserName?');">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                                    <button type="submit" class="dropdown-item text-warning">
+                                                                        <i class="fas fa-user-slash me-2"></i>Deactivate
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        }
+                                                        else
+                                                        {
+                                                            <li>
+                                                                <form method="post" action="@Url.Action("ReactivateUser", "Manage", new { area = "CLIP" })" onsubmit="return confirm('Reactivate user @user.UserName?');">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@user.Id" />
+                                                                    <button type="submit" class="dropdown-item text-success">
+                                                                        <i class="fas fa-user-check me-2"></i>Reactivate
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                            <li>
+                                                                <button type="button" class="dropdown-item text-danger delete-user-btn" data-user-id="@user.Id" data-user-name="@user.UserName">
+                                                                    <i class="fas fa-trash me-2"></i>Delete User
+                                                                </button>
+                                                            </li>
+                                                        }
                                                     </ul>
                                                 </div>
                                             </span>
@@ -376,8 +435,8 @@
                     "info": "Showing _START_ to _END_ of _TOTAL_ users"
                 },
                 "columnDefs": [
-                    { "targets": [3, 4, 5], "className": "text-center" },
-                    { "targets": 7, "orderable": false }
+                    { "targets": [3, 4, 5, 7], "className": "text-center" },
+                    { "targets": 8, "orderable": false }
                 ],
                 "autoWidth": false,
                 "responsive": true,

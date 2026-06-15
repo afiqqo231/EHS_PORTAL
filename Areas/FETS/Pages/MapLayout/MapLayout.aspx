@@ -312,47 +312,104 @@
         .map-modal-body {
             padding: 20px;
             text-align: center;
+            width: 100%;
         }
 
         .modal-marker {
             position: absolute;
             width: 14px;
             height: 14px;
-            transform: translate(-50%, -100%);
+            transform: translate(-50%, -50%);
             cursor: default;
             z-index: 10;
         }
 
         .modal-marker-icon {
-            width:14px;
+            width: 14px;
             height: 14px;
-            background-color: #e74c3c;
-            border: 2px solid #c0392b;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
+            border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .modal-marker-tooltip {
+        .modal-marker-icon:hover {
+            transform: scale(1.5);
+        }
+
+        .modal-marker-info {
             position: absolute;
-            bottom: calc(100% +6px);
+            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             background: white;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            padding: 8px 10px;
-            width: 160px;
-            font-size: 0.78rem;
-            line-height: 1.5;
+            padding: 10px;
+            width: 200px;
             display: none;
             z-index: 20;
-            pointer-events: none;
+            font-size: 0.82rem;
+            line-height: 1.5;
             text-align: left;
+            pointer-events: none;
         }
 
-        .modal-marker:hover .modal-marker-tooltip {
+        .modal-marker-info::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+
+        .modal-marker:hover {
+            z-index: 100;
+        }
+
+        .modal-marker:hover .modal-marker-info {
             display: block;
+        }
+
+        .modal-ghost-marker-pin {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+        }
+
+        .modal-magnifier-glass {
+            position: absolute;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: none;
+            width: 100px;
+            height: 100px;
+            display: none;
+            z-index: 15;
+        }
+
+        .modal-magnifier-glass::before,
+        .modal-magnifier-glass::after {
+            content: '';
+            position: absolute;
+            background: rgba(0,0,0,0.45);
+            pointer-events: none;
+        }
+
+        .modal-magnifier-glass::before {
+            top: 50%; left: 15%; width: 70%; height: 1px;
+            transform: translateY(-50%);
+        }
+
+        .modal-magnifier-glass::after {
+            left: 50%; top: 15%; height: 70%; width: 1px;
+            transform: translateX(-50%);
         }
 
         .full-screen-map {
@@ -638,12 +695,14 @@
                             <asp:TemplateField HeaderText="Actions">
                                 <ItemTemplate>
                                     <div class="action-buttons">
-                                        <asp:LinkButton ID="btnView" runat="server" 
-                                            CommandName="ViewMap" 
-                                            CommandArgument='<%# Eval("ImagePath") + "," + Eval("PlantName") + "," + Eval("LevelName") %>'
-                                            CssClass="btn btn-sm btn-primary"
-                                            Text="View"
-                                            OnClientClick='<%# "openMapModal(\"" + ResolveUrl("~/Uploads/Maps/" + Eval("ImagePath")) + "\", \"" + Eval("PlantName") + "\", \"" + Eval("LevelName") + "\", " + Eval("PlantID") + ", " + Eval("LevelID") + "); return false;" %>' />
+                                        <button type="button"
+                                            class="btn btn-sm btn-primary"
+                                            data-image-url='<%# ResolveUrl("~/Uploads/Maps/" + Eval("ImagePath").ToString()) %>'
+                                            data-plant-name='<%# Eval("PlantName") %>'
+                                            data-level-name='<%# Eval("LevelName") %>'
+                                            data-plant-id='<%# Eval("PlantID") %>'
+                                            data-level-id='<%# Eval("LevelID") %>'
+                                            onclick="openMapFromButton(this)">View</button>
                                         <asp:LinkButton ID="btnDelete" runat="server" 
                                             CommandName="DeleteMap" 
                                             CommandArgument='<%# Eval("MapID") %>'
@@ -683,17 +742,17 @@
             <div class="map-modal-footer" style="padding: 12px 20px; border-top: 1px solid #dee2e6; text-align: right; background: #f8f9fa; border-radius: 0 0 8px 8px;">
                 <a id="btnOpenFullView" href="#" target="_blank"
                    style="padding: 8px 16px; background: #007bff; color: white; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
-                    &#128507; Open Full View (Pin Mode)
+                    Open Full View (Pin Mode)
                 </a>
             </div>
         </div>
     </div>
 
-    <div id="feEditModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6);">
-        <div style="background:white; margin:8% auto; padding:0; width:420px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
-            <div style="padding:14px 20px; border-bottom:1px solid #dee2e6; display:flex; justify-content:space-betweem; align-items:center;">
+    <div id="feEditModal" style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+        <div style="background:white; margin:0; padding:0; width:420px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+            <div style="padding:14px 20px; border-bottom:1px solid #dee2e6; position:relative; text-align:center;">
                 <strong>Edit Fire Extinguisher</strong>
-                <span onclick="closeEditModal()" style="cursor:pointer; font-size:1.4rem; color:#aaa">&times;</span>
+                <span onclick="closeEditModal()" style="cursor:pointer; font-size:1.4rem; color:#aaa; position:absolute; right:16px; top:50%; transform:translateY(-50%)">&times;</span>
             </div>
 
             <div style="padding:20px;">
@@ -719,14 +778,18 @@
                     <label>Status</label>
                     <select id="editStatus" class="form-control"></select>
                 </div>
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <textarea id="editRemarks" class="form-control" rows="3"></textarea>
+                </div>
             </div>
 
             <div style="padding:12px 20px; border-top:1px solid #dee2e6; text-align:right; background:#f8f9fa; border-radius:0 0 8px 8px;">
                 <span id="editSaveStatus" style="font-size:0.85rem; margin-right:10px;"></span>
-                <button onclick="closeEditModal()" style="padding:6px 14px; margin-right:8px; border:1px solid #ccc; background:white; border-radius:4px; cursor:pointer;">
+                <button type="button" onclick="closeEditModal()" style="padding:6px 14px; margin-right:8px; border:1px solid #ccc; background:white; border-radius:4px; cursor:pointer;">
                     Cancel
                 </button>
-                <button onclick="saveEditedFE()" style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
+                <button type="button" onclick="saveEditedFE()" style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
                     Save
                 </button>
             </div>
@@ -789,6 +852,16 @@
         }
 
         // Modal functions
+        function openMapFromButton(btn) {
+            openMapModal(
+                btn.getAttribute('data-image-url'),
+                btn.getAttribute('data-plant-name'),
+                btn.getAttribute('data-level-name'),
+                btn.getAttribute('data-plant-id'),
+                btn.getAttribute('data-level-id')
+            );
+        }
+
         function openMapModal(imageUrl, plantName, levelName, plantId, levelId) {
             var modal = document.getElementById('mapModal');
             var fullScreenMap = document.getElementById('fullScreenMap');
@@ -803,6 +876,8 @@
             btnFullView.href = '<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/ViewMap.aspx") %>?PlantID=' + plantId + '&LevelID=' + levelId;
             
             // Load Fire Extinguisher pins
+            _modalPlantId = plantId;
+            _modalLevelId = levelId;
             document.getElementById('modalMarkersContainer').innerHTML = '';
             fullScreenMap.onload = function () {
                 loadModalPins(plantId, levelId);
@@ -821,15 +896,16 @@
         function closeMapModal() {
             var modal = document.getElementById('mapModal');
             modal.style.display = 'none';
-            
-            // Re-enable scrolling on the body
             document.body.style.overflow = 'auto';
-            
-            // Remove escape key listener
             document.removeEventListener('keydown', closeModalOnEscape);
 
-            // Clear existing pins from modal
             document.getElementById('modalMarkersContainer').innerHTML = '';
+            _modalMarkers = [];
+            _modalMagnifierEnabled = false;
+            if (_modalGlass && _modalGlass.parentElement) {
+                _modalGlass.remove();
+                _modalGlass = null;
+            }
         }
         
         function closeModalOnEscape(e) {
@@ -846,51 +922,172 @@
             }
         }
 
+        var _modalMarkers = [];
+        var _modalGlass = null;
+        var _modalMagnifierEnabled = false;
+        var _modalLastMouseEvent = null;
+        var _modalPlantId = null;
+        var _modalLevelId = null;
+
+        var MODAL_MARKER_COLORS = {
+            active:   { bg: '#27ae60', border: '#1e8449' },
+            inactive: { bg: '#e74c3c', border: '#c0392b' },
+            service: { bg: '#f39c12', border: '#d68910' }
+        };
+
         function loadModalPins(plantId, levelId) {
+            var img = document.getElementById('fullScreenMap');
+            var container = document.getElementById('modalMarkersContainer');
+            container.innerHTML = '';
+            _modalMarkers = [];
+
+            if (_modalGlass && _modalGlass.parentElement) {
+                _modalGlass.remove();
+                _modalGlass = null;
+            }
+
+            _modalGlass = document.createElement('div');
+            _modalGlass.className = 'modal-magnifier-glass';
+            img.parentElement.insertBefore(_modalGlass, img);
+
+            var zoom = 2, bw = 3;
+            var w = 50, h = 50; // glass radius (100px / 2)
+
+            function applyGlassBg() {
+                _modalGlass.style.backgroundImage = "url('" + img.src + "')";
+                _modalGlass.style.backgroundRepeat = 'no-repeat';
+                _modalGlass.style.backgroundSize = (img.width * zoom) + 'px ' + (img.height * zoom) + 'px';
+            }
+            if (img.complete && img.naturalWidth > 0) applyGlassBg();
+            else img.addEventListener('load', applyGlassBg);
+
+            function moveMagnifier(e) {
+                if (!_modalMagnifierEnabled) return;
+                e.preventDefault();
+                var rect = img.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+
+                if (x > img.width - w / zoom) x = img.width - w / zoom;
+                if (x < w / zoom) x = w / zoom;
+                if (y > img.height - h / zoom) y = img.height - h / zoom;
+                if (y < h / zoom) y = h / zoom;
+
+                _modalGlass.style.left = (x - w) + 'px';
+                _modalGlass.style.top  = (y - h) + 'px';
+                _modalGlass.style.backgroundPosition = '-' + ((x * zoom) - w + bw) + 'px -' + ((y * zoom) - h + bw) + 'px';
+
+                var hideRadiusSq  = w * w * zoom * zoom;
+                var ghostRadiusSq = (w - 4) * (w - 4);
+                _modalMarkers.forEach(function(m) {
+                    var px = m.data.pinX * img.width;
+                    var py = m.data.pinY * img.height;
+                    var relX = (px - x) * zoom + w;
+                    var relY = (py - y) * zoom + h;
+                    var dx = relX - w, dy = relY - h;
+                    var distSq = dx * dx + dy * dy;
+                    m.element.style.visibility = distSq < hideRadiusSq ? 'hidden' : 'visible';
+                    if (m.ghost) {
+                        var inGlass = distSq < ghostRadiusSq;
+                        m.ghost.style.display = inGlass ? 'block' : 'none';
+                        if (inGlass) { m.ghost.style.left = relX + 'px'; m.ghost.style.top = relY + 'px'; }
+                    }
+                });
+            }
+
+            function hideModalGhosts() {
+                _modalMarkers.forEach(function(m) {
+                    if (m.ghost) m.ghost.style.display = 'none';
+                    m.element.style.visibility = 'visible';
+                });
+            }
+
+            img.addEventListener('mousemove', function(e) { _modalLastMouseEvent = e; moveMagnifier(e); });
+            _modalGlass.addEventListener('mousemove', moveMagnifier);
+            _modalGlass.addEventListener('mouseleave', hideModalGhosts);
+            img.addEventListener('mouseleave', hideModalGhosts);
+
             var url = '<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/GetPins.ashx") %>' + '?PlantID=' + plantId + '&LevelID=' + levelId;
-
             fetch(url)
-                .then(function (r){
-                    if (!r.ok) throw new Error('Status ' + r.status);
-                    return r.json();
-                })
-                .then(function (pins) {
-                    var container = document.getElementById('modalMarkersContainer');
+                .then(function(r) { if (!r.ok) throw new Error('Status ' + r.status); return r.json(); })
+                .then(function(pins) {
+                    pins.forEach(function(pin) {
+                        var isActive = pin.status.toLowerCase().includes('active');
+                        var isService = pin.status.toLowerCase().includes('servicing');
+                        var colors   = isActive ? MODAL_MARKER_COLORS.active : MODAL_MARKER_COLORS.inactive;
+                        if (isService) colors = MODAL_MARKER_COLORS.service;
 
-                    pins.forEach(function (pin) {
                         var marker = document.createElement('div');
-                        marker.className = 'modal-marker';
-                        
+                        marker.className  = 'modal-marker';
                         marker.style.left = (pin.pinX * 100) + '%';
-                        marker.style.top = (pin.pinY *100) + '%';
+                        marker.style.top  = (pin.pinY * 100) + '%';
 
-                        var icon= document.createElement('div');
+                        var icon = document.createElement('div');
                         icon.className = 'modal-marker-icon';
+                        icon.style.backgroundColor = colors.bg;
+                        icon.style.border = '1.5px solid ' + colors.border;
+
+                        var info = document.createElement('div');
+                        info.className = 'modal-marker-info';
+                        info.innerHTML =
+                            '<strong>' + pin.serial + '</strong><br>' +
+                            'Type: ' + pin.type + '<br>' +
+                            'Location: ' + pin.location + '<br>' +
+                            'Expires: ' + (pin.expiry || 'N/A') + '<br>' +
+                            'Status: <span class="badge ' + (isActive ? 'text-bg-success' : (isService ? 'text-bg-warning' : 'text-bg-danger')) + '">' + pin.status + '</span>';
+
+                        marker.appendChild(icon);
+                        marker.appendChild(info);
+                        if (pin.remarks != '') {
+                            var remarks = document.createElement('div');
+                            remarks.style.marginTop = '6px';
+                            remarks.style.fontStyle = 'italic';
+                            remarks.textContent = '* ' + pin.remarks;
+                            info.appendChild(remarks);
+                        }
+                        container.appendChild(marker);
 
                         marker.addEventListener('click', function(e) {
                             e.stopPropagation();
                             openEditModal(pin);
                         });
-                        var tooltip = document.createElement('div');
-                        tooltip.className = 'modal-marker-tooltip';
-                        tooltip.innerHTML = '<strong>' + pin.serial + '</strong><br>' + pin.type + '<br>' + pin.location + '<br>' + '<span style="color: ' + (pin.status.toLowerCase().includes('active') ? 'green' : 'red') + '">' + pin.status + '</span>';
-                        marker.appendChild(icon);
-                        marker.appendChild(tooltip);
-                        container.appendChild(marker);
+
+                        var ghost = document.createElement('div');
+                        ghost.className = 'modal-ghost-marker-pin';
+                        ghost.style.backgroundColor = colors.bg;
+                        ghost.style.border = '1.5px solid ' + colors.border;
+                        _modalGlass.appendChild(ghost);
+
+                        _modalMarkers.push({ element: marker, data: pin, ghost: ghost });
                     });
                 })
-                .catch(function (err) {
-                    console.error('GetPins failed:', err);
-                })
-
+                .catch(function(err) { console.error('GetPins failed:', err); });
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Control' || !_modalGlass) return;
+            _modalMagnifierEnabled = true;
+            _modalGlass.style.display = 'block';
+        });
+        document.addEventListener('keyup', function(e) {
+            if (e.key !== 'Control') return;
+            _modalMagnifierEnabled = false;
+            if (_modalGlass) _modalGlass.style.display = 'none';
+        });
 
         function openEditModal(pin)
         {
             document.getElementById('editFEID').value = pin.feId;
             document.getElementById('editSerial').value = pin.serial;
             document.getElementById('editLocation').value = pin.location;
-            document.getElementById('editExpiry').value = pin.expiry || '';
+            // Convert dd/MM/yyyy → yyyy-MM-dd for <input type="date">
+            if (pin.expiry) {
+                var parts = pin.expiry.split('/');
+                document.getElementById('editExpiry').value = parts[2] + '-' + parts[1] + '-' + parts[0];
+            } else {
+                document.getElementById('editExpiry').value = '';
+            }
+           document.getElementById('editRemarks').value = pin.remarks;
 
             var typeSelect = document.getElementById('editType');
             typeSelect.innerHTML = '';
@@ -913,7 +1110,7 @@
             });
 
             document.getElementById('editSaveStatus').textContent = '';
-            document.getElementById('feEditModal').style.display = 'block';
+            document.getElementById('feEditModal').style.display = 'flex';
         }
 
         function closeEditModal() {
@@ -927,6 +1124,7 @@
             var typeId = document.getElementById('editType').value;
             var expiry = document.getElementById('editExpiry').value;
             var statusId = document.getElementById('editStatus').value;
+            var remarks = document.getElementById('editRemarks').value;
 
             if (!serial || !location) {
                 document.getElementById('editSaveStatus').textContent = 'Serial and Location are required.';
@@ -943,6 +1141,7 @@
             formData.append('typeId', typeId);
             formData.append('expiry', expiry);
             formData.append('statusId', statusId);
+            formData.append('remarks', remarks);
 
             fetch('<%= ResolveUrl("~/Areas/FETS/Pages/MapLayout/UpdateFE.ashx") %>', {
                 method: 'POST',
@@ -956,6 +1155,7 @@
             .then(function (text) {
                 if (text === 'ok') {
                     status.textContent = 'Saved!';
+                    if (_modalPlantId && _modalLevelId) loadModalPins(_modalPlantId, _modalLevelId);
                     setTimeout(closeEditModal, 1000);
                 } else {
                     status.textContent = 'Failed! ' + text;

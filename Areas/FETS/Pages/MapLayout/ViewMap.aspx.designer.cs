@@ -4,8 +4,7 @@ namespace FETS.Pages.MapLayout
     {
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
         protected global::System.Web.UI.WebControls.Label lblUsername;
-        protected global::System.Web.UI.WebControls.LinkButton btnBack;
-        protected global::System.Web.UI.WebControls.LinkButton btnLogout;
+        protected global::System.Web.UI.WebControls.Label lblPlantNameHeader;
         protected global::System.Web.UI.WebControls.Label lblPlantName;
         protected global::System.Web.UI.WebControls.Label lblLevelName;
         protected global::System.Web.UI.WebControls.Image imgMap;
