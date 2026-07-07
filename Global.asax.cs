@@ -20,7 +20,7 @@ namespace EHS_PORTAL
     public class MvcApplication : System.Web.HttpApplication
     {
         private static Timer _statusUpdateTimer = null;
-        private static readonly TimeSpan _updateInterval = TimeSpan.FromHours(24);
+        private static readonly TimeSpan _updateInterval = TimeSpan.FromHours(1);
         private static readonly object _lockObject = new object();
         private static bool _isUpdating = false;
 
@@ -51,9 +51,12 @@ namespace EHS_PORTAL
             
             // Update Certificate statuses immediately at startup
             UpdateCertificateStatuses();
-            
-            // Set up timer to update certificate statuses daily
-            _statusUpdateTimer = new Timer(UpdateCertificateStatusesCallback, null, 
+
+            // Update Plant Monitoring expiration statuses immediately at startup
+            UpdatePlantMonitoringStatuses();
+
+            // Set up timer to update certificate and plant monitoring statuses daily
+            _statusUpdateTimer = new Timer(UpdateCertificateStatusesCallback, null,
                 _updateInterval, _updateInterval);
         }
         
@@ -197,8 +200,9 @@ namespace EHS_PORTAL
                 {
                     if (_isUpdating) return;
                     _isUpdating = true;
-                    
+
                     UpdateCertificateStatuses();
+                    UpdatePlantMonitoringStatuses();
                 }
             }
             finally
@@ -242,6 +246,37 @@ namespace EHS_PORTAL
                 return "Expiring Soon";
             else
                 return "Active";
+        }
+
+        // Plant Monitoring's ExpStatus/ProcStatus are only recalculated when a record
+        // is edited (see PlantMonitoringController), so records left untouched go stale
+        // once their ExpDate passes. This mirrors UpdateCertificateStatuses above to
+        // keep every record's status current even if nobody opens it.
+        private void UpdatePlantMonitoringStatuses()
+        {
+            using (var context = new ApplicationDbContext())
+            {
+                var plantMonitorings = context.PlantMonitorings.ToList();
+                bool changesDetected = false;
+
+                foreach (var plantMonitoring in plantMonitorings)
+                {
+                    string previousExpStatus = plantMonitoring.ExpStatus;
+                    string previousProcStatus = plantMonitoring.ProcStatus;
+
+                    plantMonitoring.CalculateStatuses();
+
+                    if (plantMonitoring.ExpStatus != previousExpStatus || plantMonitoring.ProcStatus != previousProcStatus)
+                    {
+                        changesDetected = true;
+                    }
+                }
+
+                if (changesDetected)
+                {
+                    context.SaveChanges();
+                }
+            }
         }
         
         private void SeedSamplePlants()
