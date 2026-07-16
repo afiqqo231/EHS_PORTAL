@@ -45,11 +45,16 @@ namespace FETS.Pages.MapLayout
 
                 // Load plant and level names
                 using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT p.PlantName, l.LevelName, m.ImagePath, m.UploadDate
-                    FROM FETS.Plants p
-                    INNER JOIN FETS.Levels l ON p.PlantID = l.PlantID
-                    LEFT JOIN FETS.MapImages m ON l.PlantID = m.PlantID AND l.LevelID = m.LevelID
-                    WHERE p.PlantID = @PlantID AND l.LevelID = @LevelID", conn))
+    SELECT p.PlantName, l.LevelName, m.ImagePath, m.UploadDate
+    FROM FETS.Plants p
+    INNER JOIN FETS.Levels l ON p.PlantID = l.PlantID
+    OUTER APPLY (
+        SELECT TOP 1 mi.ImagePath, mi.UploadDate
+        FROM FETS.MapImages mi
+        WHERE mi.PlantID = l.PlantID AND mi.LevelID = l.LevelID
+        ORDER BY mi.UploadDate DESC
+    ) m
+    WHERE p.PlantID = @PlantID AND l.LevelID = @LevelID", conn))
                 {
                     cmd.Parameters.AddWithValue("@PlantID", plantId);
                     cmd.Parameters.AddWithValue("@LevelID", levelId);
