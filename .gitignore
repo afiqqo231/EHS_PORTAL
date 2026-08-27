@@ -76,3 +76,7 @@ CLAUDE.md
 App_Data/CORD/
 Uploads/CORD/
 .claude/
+.idea/
+node_modules/
+Areas/CLIP/uploads
+.DS_Store
