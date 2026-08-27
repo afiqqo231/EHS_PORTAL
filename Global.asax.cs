@@ -150,38 +150,56 @@ namespace EHS_PORTAL
             Exception exception = Server.GetLastError();
             if (exception != null)
             {
-                // Log the error to a file
-                string logPath = Server.MapPath("~/App_Data/ErrorLogs");
-                if (!Directory.Exists(logPath))
+                try
                 {
-                    Directory.CreateDirectory(logPath);
+                    // Log the error to a file
+                    string logPath = Server.MapPath("~/App_Data/ErrorLogs");
+                    if (!Directory.Exists(logPath))
+                    {
+                        Directory.CreateDirectory(logPath);
+                    }
+
+                    string logFile = Path.Combine(logPath, $"Error_{DateTime.Now:yyyyMMdd}.log");
+                    using (StreamWriter writer = new StreamWriter(logFile, true))
+                    {
+                        writer.WriteLine("----------------- Error Details -----------------");
+                        writer.WriteLine($"Date/Time: {DateTime.Now}");
+                        writer.WriteLine($"URL: {Request.Url?.ToString() ?? "Unknown URL"}");
+                        writer.WriteLine($"User IP: {Request.UserHostAddress ?? "Unknown IP"}");
+                        writer.WriteLine($"User Agent: {Request.UserAgent ?? "Unknown Agent"}");
+                        writer.WriteLine($"Error Message: {exception.Message}");
+                        writer.WriteLine($"Stack Trace: {exception.StackTrace}");
+
+                        // Log inner exception if any
+                        if (exception.InnerException != null)
+                        {
+                            writer.WriteLine($"Inner Exception: {exception.InnerException.Message}");
+                            writer.WriteLine($"Inner Stack Trace: {exception.InnerException.StackTrace}");
+                        }
+
+                        writer.WriteLine("--------------------------------------------------");
+                        writer.WriteLine();
+                    }
                 }
-                
-                string logFile = Path.Combine(logPath, $"Error_{DateTime.Now:yyyyMMdd}.log");
-                using (StreamWriter writer = new StreamWriter(logFile, true))
+                catch (Exception logEx)
                 {
-                    writer.WriteLine("----------------- Error Details -----------------");
-                    writer.WriteLine($"Date/Time: {DateTime.Now}");
-                    writer.WriteLine($"URL: {Request.Url?.ToString() ?? "Unknown URL"}");
-                    writer.WriteLine($"User IP: {Request.UserHostAddress ?? "Unknown IP"}");
-                    writer.WriteLine($"User Agent: {Request.UserAgent ?? "Unknown Agent"}");
-                    writer.WriteLine($"Error Message: {exception.Message}");
-                    writer.WriteLine($"Stack Trace: {exception.StackTrace}");
-                    
-                    // Log inner exception if any
+                    // Never let a failure to write the log file mask the real exception.
+                    // Falls back to Trace/Debug output (visible in Visual Studio's Output
+                    // window when running under the debugger) so the original error is
+                    // still discoverable even if App_Data can't be written to right now.
+                    System.Diagnostics.Trace.WriteLine("Application_Error: failed to write error log file: " + logEx.Message);
+                    System.Diagnostics.Trace.WriteLine("Original error was: " + exception.Message);
+                    System.Diagnostics.Trace.WriteLine(exception.StackTrace);
                     if (exception.InnerException != null)
                     {
-                        writer.WriteLine($"Inner Exception: {exception.InnerException.Message}");
-                        writer.WriteLine($"Inner Stack Trace: {exception.InnerException.StackTrace}");
+                        System.Diagnostics.Trace.WriteLine("Inner exception: " + exception.InnerException.Message);
+                        System.Diagnostics.Trace.WriteLine(exception.InnerException.StackTrace);
                     }
-                    
-                    writer.WriteLine("--------------------------------------------------");
-                    writer.WriteLine();
                 }
-                
+
                 // Redirect to a custom error page
                 // Response.Redirect("~/Error.cshtml");
-                
+
                 // Clear the error
                 Server.ClearError();
             }
