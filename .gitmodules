@@ -2,3 +2,7 @@
 	path = Areas/CORD
 	url = https://github.com/afiqqo231/EHSAgreementSystem.git
 	branch = EHS_PORTAL
+[submodule "Areas/ESTAFF"]
+	path = Areas/ESTAFF
+	url = https://github.com/zatdinie/ESTAFF.git
+	branch = EHS_PORTAL

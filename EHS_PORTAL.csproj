@@ -1,4 +1,4 @@
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\EntityFramework.6.5.1\build\EntityFramework.props" Condition="Exists('packages\EntityFramework.6.5.1\build\EntityFramework.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -521,15 +521,22 @@
     <Content Include="Areas\FETS\EmailTemplates\**\*.*" />
     <Content Include="Areas\FETS\Scripts\**\*.js" />
     <Content Include="Areas\FETS\DATABASE\**\*.sql" />
+    <!-- CORD Project Files -->
     <Content Include="Areas\CORD\**\*.cshtml" />
     <Content Include="Areas\CORD\favicon.ico" />
     <Content Include="Areas\CORD\Views\Web.config" />
     <Content Include="Areas\CORD\Scripts\**\*.js" />
     <Content Include="Areas\CORD\Assets\**\*.*" />
+    <!-- ESTAFF Project FIles -->
+    <Content Include="Areas\ESTAFF\**\*.cshtml" />
+    <Content Include="Areas\ESTAFF\Content\**\*.*" />
+    <Content Include="Areas\ESTAFF\Scripts\**\*.js" />
+    <Content Include="Areas\ESTAFF\DATABASE\**\*.sql" />
     <Content Include="NLog.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Areas\CORD\**\*.cs" />
+    <Compile Include="Areas\ESTAFF\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
