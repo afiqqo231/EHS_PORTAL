@@ -15,10 +15,20 @@ namespace EHS_PORTAL
         public void ConfigureAuth(IAppBuilder app)
         {
             // Configure the db context, user manager and signin manager to use a single instance per request
+            // For CLIP:
             app.CreatePerOwinContext(ApplicationDbContext.Create);
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
             app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
             app.CreatePerOwinContext<ApplicationRoleManager>(ApplicationRoleManager.Create);
+
+            // For ESTAFF:
+            app.CreatePerOwinContext(EHS_PORTAL.Areas.ESTAFF.Models.Data.ApplicationDbContext.Create);
+            app.CreatePerOwinContext<EHS_PORTAL.Areas.ESTAFF.Models.Data.EstaffUserManager>(
+                EHS_PORTAL.Areas.ESTAFF.Models.Data.EstaffUserManager.Create
+            );
+            app.CreatePerOwinContext<EHS_PORTAL.Areas.ESTAFF.Models.Data.EstaffSignInManager>(
+                EHS_PORTAL.Areas.ESTAFF.Models.Data.EstaffSignInManager.Create
+            );
 
             // Enable the application to use a cookie to store information for the signed in user
             // and to use a cookie to temporarily store information about a user logging in with a third party login provider
@@ -27,8 +37,8 @@ namespace EHS_PORTAL
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
                 LoginPath = new PathString("/CLIP/Account/Login"),
-                CookieName = ".CLIP_AUTH_COOKIE",
-                CookiePath = "/CLIP",
+                CookieName = ".AUTH_COOKIE",
+                CookiePath = "/",
                 ExpireTimeSpan = TimeSpan.FromMinutes(30),
                 SlidingExpiration = true,
                 Provider = new CookieAuthenticationProvider
