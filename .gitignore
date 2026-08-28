@@ -79,6 +79,7 @@ Areas/CLIP/uploads/*
 Areas/FETS/Pages/MapLayout/test.html
 Uploads/CORD/
 .claude/
+node_modules/
 
 # idea
 .idea
