@@ -9,6 +9,7 @@ obj/
 *.userosscache
 *.sln.docstates
 .vscode/
+.DS_Store
 
 # Build results
 [Dd]ebug/
@@ -74,9 +75,10 @@ Uploads/Maps/
 # local configuration
 CLAUDE.md
 App_Data/CORD/
+Areas/CLIP/uploads/*
+Areas/FETS/Pages/MapLayout/test.html
 Uploads/CORD/
 .claude/
-.idea/
-node_modules/
-Areas/CLIP/uploads
-.DS_Store
+
+# idea
+.idea
