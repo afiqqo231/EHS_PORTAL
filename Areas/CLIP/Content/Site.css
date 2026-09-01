@@ -33,3 +33,28 @@ textarea {
     border-left: 3px solid #6c757d;
 }
 
+/* Upcoming expiry list blink animations */
+@keyframes blink-expired {
+    0%, 100% { background-color: transparent; }
+    50%       { background-color: #ffd6d6; }
+}
+
+@keyframes blink-warning {
+    0%, 100% { background-color: transparent; }
+    50%       { background-color: #fff3cd; }
+}
+
+#upcomingExpiries .upcoming-expired {
+    animation: blink-expired 1.4s ease-in-out infinite;
+}
+
+#upcomingExpiries .upcoming-expiring-soon {
+    animation: blink-warning 2s ease-in-out infinite;
+}
+
+/* Pause the blink on hover so the user can read the item */
+#upcomingExpiries .upcoming-expired:hover,
+#upcomingExpiries .upcoming-expiring-soon:hover {
+    animation-play-state: paused;
+}
+
