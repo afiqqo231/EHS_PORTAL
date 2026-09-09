@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "@event-calendar/core": "^4.4.1"
+  },
+  "dependencies": {
+    "vercel": "^59.11.2"
   }
 }
