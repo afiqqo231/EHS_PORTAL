@@ -77,7 +77,7 @@ namespace EHS_PORTAL.Areas.FETS.Pages.MapLayout
                 context.Response.Write(JsonConvert.SerializeObject(pins));
                 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                  context.Response.StatusCode = 500;
                  context.Response.Write("[]");
