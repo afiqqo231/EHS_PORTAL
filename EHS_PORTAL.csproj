@@ -533,11 +533,16 @@
     <Content Include="Areas\ESTAFF\Content\**\*.*" />
     <Content Include="Areas\ESTAFF\Scripts\**\*.js" />
     <Content Include="Areas\ESTAFF\DATABASE\**\*.sql" />
+    <!-- FETS Mobile Project Files -->
+    <Content Include="Areas\FETS_MOBILE\app\**\*.*" />
+    <Content Include="Areas\FETS_MOBILE\map\**\*.*" />
+    <Content Include="Areas\FETS_MOBILE\DATABASE\**\*.sql" />
     <Content Include="NLog.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Areas\CORD\**\*.cs" />
     <Compile Include="Areas\ESTAFF\**\*.cs" />
+    <Compile Include="Areas\FETS_MOBILE\**\*.cs" Exclude="Areas\FETS_MOBILE\frontend\**" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
