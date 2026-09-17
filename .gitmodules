@@ -6,3 +6,7 @@
 	path = Areas/ESTAFF
 	url = https://github.com/zatdinie/ESTAFF.git
 	branch = EHS_PORTAL
+[submodule "Areas/FETS_MOBILE"]
+	path = Areas/FETS_MOBILE
+	url = https://github.com/afiqqo231/fets-mobile.git
+	branch = EHS_PORTAL
