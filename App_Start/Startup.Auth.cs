@@ -50,6 +50,10 @@ namespace EHS_PORTAL
                     {
                         // SuppressFormsAuthenticationRedirect lives on System.Web.HttpResponse, not IOwinResponse
                         System.Web.HttpContext.Current.Response.SuppressFormsAuthenticationRedirect = true;
+
+                        //fets mobile API
+                        if (ctx.Request.Path.StartsWithSegments(new PathString("/api/fets")))
+                            return;
                         ctx.Response.Redirect(ctx.RedirectUri);
                     }
                 }
