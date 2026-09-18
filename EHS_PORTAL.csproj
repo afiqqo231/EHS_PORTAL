@@ -573,12 +573,18 @@
     <Content Include="Areas\FETS_MOBILE\app\**\*.*" />
     <Content Include="Areas\FETS_MOBILE\map\**\*.*" />
     <Content Include="Areas\FETS_MOBILE\DATABASE\**\*.sql" />
+    <!-- ACCIDENT (ITSB Accident Dashboard) Project Files -->
+    <Content Include="Areas\ACCIDENT\Views\**\*.cshtml" />
+    <Content Include="Areas\ACCIDENT\Views\Web.config" />
+    <Content Include="Areas\ACCIDENT\Content\**\*.*" />
+    <Content Include="Areas\ACCIDENT\Scripts\**\*.js" />
     <Content Include="NLog.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Areas\CORD\**\*.cs" />
     <Compile Include="Areas\ESTAFF\**\*.cs" />
     <Compile Include="Areas\FETS_MOBILE\**\*.cs" Exclude="Areas\FETS_MOBILE\frontend\**" />
+    <Compile Include="Areas\ACCIDENT\**\*.cs" Exclude="Areas\ACCIDENT\ITSB.AccidentDashboard.Core\**" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
@@ -899,6 +905,12 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="Areas\ACCIDENT\ITSB.AccidentDashboard.Core\ITSB.AccidentDashboard.Core.csproj">
+      <Project>{9662FD22-C37D-4C7B-BE72-CAA147CA4554}</Project>
+      <Name>ITSB.AccidentDashboard.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
