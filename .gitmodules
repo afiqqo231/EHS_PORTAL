@@ -10,3 +10,7 @@
 	path = Areas/FETS_MOBILE
 	url = https://github.com/afiqqo231/fets-mobile.git
 	branch = EHS_PORTAL
+[submodule "Areas/ACCIDENT"]
+	path = Areas/ACCIDENT
+	url = https://github.com/zatdinie/ITSB-EHS-AccidentDashboard.git
+	branch = EHS_PORTAL
