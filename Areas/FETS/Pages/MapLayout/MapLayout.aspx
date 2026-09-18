@@ -424,6 +424,7 @@ MasterPageFile="~/Areas/FETS/Site.Master" %>
     }
 
     .full-screen-map {
+      display: block;
       max-width: 100%;
       max-height: 80vh;
       border: 1px solid #dee2e6;

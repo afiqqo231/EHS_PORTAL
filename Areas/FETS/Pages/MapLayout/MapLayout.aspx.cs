@@ -439,14 +439,20 @@ namespace FETS.Pages.MapLayout
             {
                 conn.Open();
                 string query = @"
-                    SELECT m.MapID, m.PlantID, m.LevelID, m.ImagePath, m.UploadDate,
-                           p.PlantName, l.LevelName
-                    FROM FETS.MapImages m
-                    INNER JOIN FETS.Plants p ON m.PlantID = p.PlantID
-                    INNER JOIN FETS.Levels l ON m.LevelID = l.LevelID
-                    WHERE (@PlantID IS NULL OR m.PlantID = @PlantID)
-                    AND (@LevelID IS NULL OR m.LevelID = @LevelID)
-                    ORDER BY m.UploadDate DESC";
+                    SELECT MapID, PlantID, LevelID, ImagePath, UploadDate, PlantName, LevelName
+                    FROM (
+                        SELECT m.MapID, m.PlantID, m.LevelID, m.ImagePath, m.UploadDate,
+                            p.PlantName, l.LevelName,
+                            ROW_NUMBER() OVER (PARTITION BY m.PlantID, m.LevelID
+                                                ORDER BY m.UploadDate DESC) AS rn
+                        FROM FETS.MapImages m
+                        INNER JOIN FETS.Plants p ON m.PlantID = p.PlantID
+                        INNER JOIN FETS.Levels l ON m.LevelID = l.LevelID
+                        WHERE (@PlantID IS NULL OR m.PlantID = @PlantID)
+                        AND (@LevelID IS NULL OR m.LevelID = @LevelID)
+                    ) x
+                    WHERE rn = 1
+                    ORDER BY UploadDate DESC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
